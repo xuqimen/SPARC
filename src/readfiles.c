@@ -540,28 +540,6 @@ void read_input(SPARC_INPUT_OBJ *pSPARC_Input, SPARC_OBJ *pSPARC) {
         }
     }
 
-    if (pSPARC_Input->SQ3Flag == 1){
-        #if !defined(USE_MKL) && !defined(USE_SCALAPACK)
-            printf(RED "Error: To use SQ3 method, please turn on MKL or SCALAPACK in makefile!\n"
-            "Or you can use standard method by setting SQ3_FLAG: 0.\n" RESET);
-            exit(EXIT_FAILURE); 
-        #endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
-    }
-
-    if (pSPARC_Input->spin_typ == 1 && pSPARC_Input->SQ3Flag == 1){
-        printf(RED "Error: Polarized calculation is not supported in this version of SQ method.\n"
-            "Please turn it off by setting SPIN_TYP: 0, \n"
-            "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
-        exit(EXIT_FAILURE);
-    }
-
-    if (pSPARC_Input->Calc_stress == 1 && pSPARC_Input->SQ3Flag == 1){
-        printf(RED "Error: Stress is not implemented in this version of SQ method!\n"
-            "Please turn it off by setting CALC_STRESS: 0, \n"
-            "or using standard method by setting SQ3_FLAG: 0.\n " RESET);
-        exit(EXIT_FAILURE);
-    }
-
     // copy filename into pSPARC struct
     snprintf(pSPARC->filename, L_STRING, "%s", pSPARC_Input->filename);
     

@@ -1739,17 +1739,43 @@ void SPARC_copy_input(SPARC_OBJ *pSPARC, SPARC_INPUT_OBJ *pSPARC_Input) {
         && fabs(pSPARC->k1[0]) < TEMP_TOL 
         && fabs(pSPARC->k2[0]) < TEMP_TOL 
         && fabs(pSPARC->k3[0]) < TEMP_TOL);
-
-    if (pSPARC->isGammaPoint != 1 && pSPARC->SQ3Flag == 1){
-        printf(RED "Error: Kpoint is not supported in this version of SQ method.\n"
-            "Please turn it off by setting KPOINT_GRID: 1 1 1, \n"
-            "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
-        exit(EXIT_FAILURE);
-    }
     
     // estimate memory usage
     double memory_usage = estimate_memory(pSPARC);
     pSPARC->memory_usage = memory_usage;
+
+#if !defined(USE_MKL) && !defined(USE_SCALAPACK)
+    if (pSPARC_Input->SQ3Flag == 1){
+        if (rank == 0)
+            printf(RED "Error: To use SQ3 method, please turn on MKL or SCALAPACK in makefile!\n"
+            "Or you can use standard method by setting SQ3_FLAG: 0.\n" RESET);
+        exit(EXIT_FAILURE); 
+    }
+#endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
+
+    if (pSPARC->isGammaPoint != 1 && pSPARC->SQ3Flag == 1){
+        if (rank == 0)
+            printf(RED "Error: Kpoint is not supported in this version of SQ method.\n"
+                "Please turn it off by setting KPOINT_GRID: 1 1 1, \n"
+                "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
+        exit(EXIT_FAILURE);
+    }
+
+    if (pSPARC->spin_typ == 1 && pSPARC->SQ3Flag == 1){
+        if (rank == 0)
+            printf(RED "Error: Polarized calculation is not supported in this version of SQ method.\n"
+                "Please turn it off by setting SPIN_TYP: 0, \n"
+                "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
+        exit(EXIT_FAILURE);
+    }
+
+    if (pSPARC->Calc_stress == 1 && pSPARC->SQ3Flag == 1){
+        if (rank == 0)
+            printf(RED "Error: Stress is not implemented in this version of SQ method!\n"
+                "Please turn it off by setting CALC_STRESS: 0, \n"
+                "or using standard method by setting SQ3_FLAG: 0.\n " RESET);
+        exit(EXIT_FAILURE);
+    }
 }
 
 
