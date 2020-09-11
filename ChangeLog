@@ -3,7 +3,14 @@
 -Name
 -changes
 
-
+--------------
+Sep 10, 2020
+Name: Xin Jing
+Changes: (sq3.c, sq3.h, eigensolver.c, electronDensity.c, electronicGroundState.c, energy.c, 
+finalization.c, forces.c, initialization.c, occupation.c, orbitalElecDensInit.c, parallelization.c, pressure.c)
+1. Add the SQ3 method to SPARC
+2. Bug fix in DP: when kpt_comm is larger than dm_comm, idle kpt_comm has to be freed.
+ 
 --------------
 Aug 27, 2020
 Name: Qimen Xu
