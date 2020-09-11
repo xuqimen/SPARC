@@ -20,6 +20,7 @@
 #include "tools.h"
 #include "eigenSolver.h"     // free_GTM_CheFSI()
 #include "eigenSolverKpt.h"  // free_GTM_CheFSI_kpt()
+#include "sq3.h"
 /* ScaLAPACK routines */
 #ifdef USE_MKL
     #include "blacs.h"     // Cblacs_*
@@ -125,16 +126,16 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
         }
         //free(pSPARC->forces);
         // free MD and relax stuff
-    	if(pSPARC->MDFlag == 1 || pSPARC->RelaxFlag == 1 || pSPARC->RelaxFlag == 3){
-      		free(pSPARC->delectronDens);
-      		free(pSPARC->delectronDens_0dt);
-      		free(pSPARC->delectronDens_1dt);
-      		free(pSPARC->delectronDens_2dt);
-      		free(pSPARC->atom_pos_nm);
-      		free(pSPARC->atom_pos_0dt);
-      		free(pSPARC->atom_pos_1dt);
-      		free(pSPARC->atom_pos_2dt);
-    	}
+        if(pSPARC->MDFlag == 1 || pSPARC->RelaxFlag == 1 || pSPARC->RelaxFlag == 3){
+            free(pSPARC->delectronDens);
+            free(pSPARC->delectronDens_0dt);
+            free(pSPARC->delectronDens_1dt);
+            free(pSPARC->delectronDens_2dt);
+            free(pSPARC->atom_pos_nm);
+            free(pSPARC->atom_pos_0dt);
+            free(pSPARC->atom_pos_1dt);
+            free(pSPARC->atom_pos_2dt);
+        }
     }
     
     if (pSPARC->isGammaPoint){
@@ -247,9 +248,9 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
     }
     // then free the psd struct itself
     free(pSPARC->psd);
-	if (pSPARC->dmcomm != MPI_COMM_NULL && pSPARC->bandcomm_index >= 0) {
-		free(pSPARC->Veff_loc_dmcomm);
-	}
+    if (pSPARC->dmcomm != MPI_COMM_NULL && pSPARC->bandcomm_index >= 0) {
+        free(pSPARC->Veff_loc_dmcomm);
+    }
     
     //if (pSPARC->npkpt > 1 && pSPARC->kptcomm_topo != MPI_COMM_NULL) {
     free(pSPARC->Veff_loc_kptcomm_topo);
@@ -275,7 +276,45 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
         Free_D2D_Target(&pSPARC->d2d_dmcomm_lanczos, &pSPARC->d2d_kptcomm_topo,
                        pSPARC->bandcomm_index == 0 ? pSPARC->dmcomm : MPI_COMM_NULL, pSPARC->kptcomm_topo);
     }
-                     
+    
+    if (pSPARC->SQ3Flag == 1){
+        if (pSPARC->isGammaPoint)
+            if (pSPARC->dmcomm != MPI_COMM_NULL) 
+                free(pSPARC->Zorb);
+
+        free_ChemComp(pSPARC);
+    #if defined(USE_MKL) || defined(USE_SCALAPACK)
+        if (pSPARC->kptcomm_index != -1){
+            // Cfree_blacs_system_handle(pSPARC->bhandle_kptcomm);
+            if (pSPARC->ictxt_kptcomm > -1)
+                Cblacs_gridexit(pSPARC->ictxt_kptcomm);
+            
+            // Cfree_blacs_system_handle(pSPARC->bhandle_SQ);
+            if (pSPARC->ictxt_SQ > -1)
+                Cblacs_gridexit(pSPARC->ictxt_SQ);
+            
+            Cfree_blacs_system_handle(pSPARC->bhandle_cmc);
+            if (pSPARC->ictxt_cmc > -1)
+                Cblacs_gridexit(pSPARC->ictxt_cmc);
+
+            Cfree_blacs_system_handle(pSPARC->bhandle_Ds);
+            if (pSPARC->ictxt_Ds > -1)
+                Cblacs_gridexit(pSPARC->ictxt_Ds);
+        }
+    #endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
+        free(pSPARC->Hp_SQ);
+        if (pSPARC->SQcomm != MPI_COMM_NULL)
+            MPI_Comm_free(&pSPARC->SQcomm);   
+
+        if (pSPARC->Dscomm != MPI_COMM_NULL){
+            MPI_Comm_free(&pSPARC->Dscomm);  
+            #ifndef USE_DP_SUBEIG
+            free(pSPARC->Hp_cmc);
+            #endif
+            free(pSPARC->Ds_cmc);
+        }
+    }
+
     // free communicators
     if (pSPARC->dmcomm_phi != MPI_COMM_NULL) {
         if (pSPARC->cell_typ != 0) {
@@ -317,7 +356,7 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
     #if defined(USE_MKL) || defined(USE_SCALAPACK)
     Cblacs_gridexit(pSPARC->ictxt_blacs);
     Cblacs_gridexit(pSPARC->ictxt_blacs_topo);
-    Cblacs_exit(1); // is this necessary
+    // Cblacs_exit(1); // is this necessary
     #endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
 
     #ifdef USE_DP_SUBEIG
@@ -331,7 +370,7 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
 
     // free the memory allocated by the Intel MKL memory management software
     #ifdef USE_MKL
-    // mkl_thread_free_buffers();
+    mkl_thread_free_buffers();
     mkl_free_buffers();
     #endif
 }
@@ -339,11 +378,11 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
 /*
 @ brief: function clears the scf variables after every relax/MD step
 */
-void Free_scfvar(SPARC_OBJ *pSPARC) {	
-	int i, j;
-	
-	int iat, ityp;
-	if (pSPARC->isGammaPoint){
+void Free_scfvar(SPARC_OBJ *pSPARC) {   
+    int i, j;
+    
+    int iat, ityp;
+    if (pSPARC->isGammaPoint){
         // deallocate nonlocal projectors in psi-domain
         if (pSPARC->dmcomm != MPI_COMM_NULL && pSPARC->bandcomm_index >= 0) {
             for (ityp = 0; ityp < pSPARC->Ntypes; ityp++) { 
@@ -409,7 +448,7 @@ void Free_scfvar(SPARC_OBJ *pSPARC) {
         }
     }    
 
-	// free atom influence struct components
+    // free atom influence struct components
     if (pSPARC->dmcomm_phi != MPI_COMM_NULL) {
         for (i = 0; i < pSPARC->Ntypes; i++) {
             free(pSPARC->Atom_Influence_local[i].coords);
@@ -444,7 +483,7 @@ void Free_scfvar(SPARC_OBJ *pSPARC) {
         }
         free(pSPARC->Atom_Influence_nloc);
     }
-	if (pSPARC->kptcomm_topo != MPI_COMM_NULL && pSPARC->kptcomm_index >= 0) {
+    if (pSPARC->kptcomm_topo != MPI_COMM_NULL && pSPARC->kptcomm_index >= 0) {
         for (i = 0; i < pSPARC->Ntypes; i++) {
             if (pSPARC->Atom_Influence_nloc_kptcomm[i].n_atom > 0) {
                 free(pSPARC->Atom_Influence_nloc_kptcomm[i].coords);
