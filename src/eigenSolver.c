@@ -994,6 +994,7 @@ void DP_Subspace_Rotation(SPARC_OBJ *pSPARC, double *Psi_rot)
 void free_DP_CheFSI(SPARC_OBJ *pSPARC)
 {
     DP_CheFSI_t DP_CheFSI = (DP_CheFSI_t) pSPARC->DP_CheFSI;
+    MPI_Comm_free(&DP_CheFSI->kpt_comm);
     if (DP_CheFSI == NULL) return;
     
     free(DP_CheFSI->Ns_bp_displs);
