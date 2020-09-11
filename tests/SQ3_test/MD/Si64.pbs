@@ -1,0 +1,20 @@
+#PBS -N test_Si
+#PBS -q hive-interact
+#PBS -o output.sparc
+#PBS -j oe
+#PBS -l nodes=2:ppn=24
+#PBS -l pmem=7gb
+#PBS -l walltime=1:00:00
+
+MYPROCS=48
+
+
+ulimit -s unlimited
+
+export MV2_USE_RDMA_CM=1
+
+cd ${PBS_O_WORKDIR}
+echo $PWD
+echo "======================================================================="
+mpirun -np $MYPROCS valgrind --leak-check=full --track-origins=yes ../../../lib/sparc -name Si64 -log_summary > Si64.log
+echo "======================================================================="

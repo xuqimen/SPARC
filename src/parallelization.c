@@ -42,6 +42,7 @@
 #include "tools.h"
 #include "isddft.h"
 #include "initialization.h"
+#include "sq3.h"
 
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)<(b)?(a):(b))
@@ -659,6 +660,7 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
 #ifdef DEBUG
     if (!rank) {
         printf("nproc = %d, size_blacscomm = %d = dims[0] * dims[1] = (%d, %d)\n", nproc, size_blacscomm, dims[0], dims[1]);
+        printf("Nd_blacscomm %d, Nstates %d \n", Nd_blacscomm, pSPARC->Nstates);
     }
 #endif
     // TODO: CHANGE USERMAP TO COLUMN MAJOR!
@@ -681,6 +683,7 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
         }
     } else {
         Cblacs_gridmap( &pSPARC->ictxt_blacs, usermap_0, 1, 1, dims[0] * dims[1]); // row topology
+        // pSPARC->ictxt_blacs = -1;
     }
     free(usermap_0);
 
@@ -700,6 +703,7 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
 
     // get coord of each process in original context
     Cblacs_gridinfo( pSPARC->ictxt_blacs, &nprow, &npcol, &myrow, &mycol );
+
     int ZERO = 0, mb, nb, llda;
     mb = max(1, pSPARC->Nd_d_dmcomm);
     nb = (pSPARC->Nstates - 1) / pSPARC->npband + 1; // equal to ceil(Nstates/npband), for int only
@@ -710,7 +714,7 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
                   &mb, &nb, &ZERO, &ZERO, &pSPARC->ictxt_blacs, &llda, &info);
     } else {
         for (i = 0; i < 9; i++)
-            pSPARC->desc_orbitals[i] = 0;
+            pSPARC->desc_orbitals[i] = -1;
     }
     int temp_r, temp_c;
     temp_r = numroc_( &Nd_blacscomm, &mb, &myrow, &ZERO, &nprow);
@@ -722,7 +726,7 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
     Cblacs_gridinfo( pSPARC->ictxt_blacs_topo, &nprow, &npcol, &myrow, &mycol );
     pSPARC->nprow_ictxt_blacs_topo = nprow;
     pSPARC->npcol_ictxt_blacs_topo = npcol;
-
+    
     // set up descriptor for block-cyclic format storage of orbitals in ictxt_blacs
     // TODO: make block-cyclic parameters mb and nb input variables!
     mb = max(1, Nd_blacscomm / dims[0]); // this is only block, no cyclic! Tune this to improve efficiency!
@@ -742,7 +746,7 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
                   &mb, &nb, &ZERO, &ZERO, &pSPARC->ictxt_blacs_topo, &llda, &info);
     } else {
         for (i = 0; i < 9; i++)
-            pSPARC->desc_orb_BLCYC[i] = 0;
+            pSPARC->desc_orb_BLCYC[i] = -1;
     }
 
     // allocate memory for block cyclic distribution of orbitals
@@ -817,10 +821,9 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
                   &mbQ, &nbQ, &ZERO, &ZERO, &pSPARC->ictxt_blacs_topo, &lldaQ, &info);
     } else {
         for (i = 0; i < 9; i++) {
-            pSPARC->desc_Q_BLCYC[i] = pSPARC->desc_Mp_BLCYC[i] = pSPARC->desc_Hp_BLCYC[i] = 0;
+            pSPARC->desc_Q_BLCYC[i] = pSPARC->desc_Mp_BLCYC[i] = pSPARC->desc_Hp_BLCYC[i] = -1;
         }
     }
-
 #ifdef DEBUG
     if (!rank) printf("rank = %d, nr_Hp = %d, nc_Hp = %d\n", rank, pSPARC->nr_Hp_BLCYC, pSPARC->nc_Hp_BLCYC);
 #endif
@@ -835,6 +838,146 @@ void Setup_Comms(SPARC_OBJ *pSPARC) {
         pSPARC->Mp_kpt = (double complex *) malloc(pSPARC->nr_Mp_BLCYC * pSPARC->nc_Mp_BLCYC * sizeof(double complex));
         pSPARC->Q_kpt  = (double complex *) malloc(pSPARC->nr_Q_BLCYC * pSPARC->nc_Q_BLCYC * sizeof(double complex));
     }
+
+    if (pSPARC->SQ3Flag == 1){
+        if (pSPARC->kptcomm_index != -1){
+            // initialize kptcomm grid
+            pSPARC->bhandle_kptcomm = Csys2blacs_handle(pSPARC->kptcomm);
+            pSPARC->ictxt_kptcomm = pSPARC->bhandle_kptcomm;
+
+            Cblacs_gridinit( &pSPARC->ictxt_kptcomm, "Row", 1, size_kptcomm);
+        } else {
+            pSPARC->ictxt_kptcomm = -1;
+        }
+
+        // set up a square grid for the matrix operation on Hp
+        int mb_SQ, nb_SQ;
+        // using the largest square grid for Hp_SQ
+        nprow = npcol = (int)sqrt((double)size_kptcomm);
+        #ifdef DEBUG
+        if (!rank) printf("SQ grid size: %d x %d\n", nprow, npcol);
+        #endif
+        mb_SQ = nb_SQ = pSPARC->Nstates / nprow;
+
+        if (pSPARC->kptcomm_index != -1){
+            // initialize SQ grid
+            pSPARC->bhandle_SQ = Csys2blacs_handle(pSPARC->kptcomm);
+            pSPARC->ictxt_SQ = pSPARC->bhandle_SQ;
+
+            Cblacs_gridinit( &pSPARC->ictxt_SQ, "Row", nprow, npcol);
+            Cblacs_gridinfo( pSPARC->ictxt_SQ, &nprow, &npcol, &myrow, &mycol );
+
+            // Construct SQ_comm including only processors within SQ_comm
+            MPI_Group kptgroup, SQ_group;
+            MPI_Comm_group(pSPARC->kptcomm, &kptgroup);
+            int *incl_ranks = (int*) calloc(nprow*npcol, sizeof(int));
+            for (i = 0; i < nprow*npcol; i++)
+                incl_ranks[i] = i;
+
+            MPI_Group_incl(kptgroup, nprow*npcol, incl_ranks, &SQ_group);
+            free(incl_ranks);
+
+            MPI_Comm_create(pSPARC->kptcomm, SQ_group, &pSPARC->SQcomm);
+            MPI_Group_free(&kptgroup);
+            MPI_Group_free(&SQ_group);
+
+            // calculating the local size for projected Hamiltonian 
+            if (pSPARC->ictxt_SQ > -1){
+                pSPARC->nr_Hp_SQ = numroc_( &pSPARC->Nstates, &mb_SQ, &myrow, &ZERO, &nprow );
+                pSPARC->nc_Hp_SQ = numroc_( &pSPARC->Nstates, &nb_SQ, &mycol, &ZERO, &npcol );
+                llda = max(1,pSPARC->nr_Hp_SQ);
+                descinit_(pSPARC->desc_Hp_SQ, &pSPARC->Nstates, &pSPARC->Nstates, 
+                        &mb_SQ, &nb_SQ,  &ZERO, &ZERO, &pSPARC->ictxt_SQ, &llda, &info);
+            } else {
+                pSPARC->nr_Hp_SQ = pSPARC->nc_Hp_SQ = 0;
+                for (i = 0; i < 9; i++){
+                    pSPARC->desc_Hp_SQ[i] = -1;
+                }
+            }
+        } else {
+            // Suggest to set default values -1 rather than 0
+            pSPARC->ictxt_SQ = -1;
+            pSPARC->nr_Hp_SQ = pSPARC->nc_Hp_SQ = 0;
+            for (i = 0; i < 9; i++){
+                pSPARC->desc_Hp_SQ[i] = -1;
+            }
+            pSPARC->SQcomm = MPI_COMM_NULL;
+        }
+
+        // Allocating memory space for Hp
+        pSPARC->Hp_SQ = (double*) calloc(pSPARC->nr_Hp_SQ * pSPARC->nc_Hp_SQ, sizeof(double));
+
+        // set up a context with single processor to receive entire density matrix Ds
+        int mb_cmc, nb_cmc;
+        nprow = npcol = 1;
+        mb_cmc = nb_cmc = pSPARC->Nstates;
+
+        if (pSPARC->kptcomm_index != -1){
+            pSPARC->bhandle_cmc = Csys2blacs_handle(pSPARC->kptcomm);
+            pSPARC->ictxt_cmc = pSPARC->bhandle_cmc;
+
+            Cblacs_gridinit( &pSPARC->ictxt_cmc, "Row", nprow, npcol);
+            Cblacs_gridinfo( pSPARC->ictxt_cmc, &nprow, &npcol, &myrow, &mycol );
+
+            if (pSPARC->ictxt_cmc > -1){
+                llda = max(1, pSPARC->Nstates);
+                descinit_(pSPARC->desc_Hp_cmc, &pSPARC->Nstates, &pSPARC->Nstates, 
+                        &mb_cmc, &nb_cmc,  &ZERO, &ZERO, &pSPARC->ictxt_cmc, &llda, &info);   
+            } else {
+                for (i = 0; i < 9; i++){
+                    pSPARC->desc_Hp_cmc[i] = -1;
+                }
+            }
+        } else {
+            pSPARC->ictxt_cmc = -1;
+            for (i = 0; i < 9; i++){
+                pSPARC->desc_Hp_cmc[i] = -1;
+            }
+        }
+
+        // Construct Dscomm only including processors using in calculating density matrix Ds
+        pSPARC->size_Dscomm = min(nproc_kptcomm, pSPARC->Nstates);
+        #ifdef DEBUG
+        if (!rank) printf("Using %d processors to calculate Ds\n", pSPARC->size_Dscomm);
+        #endif
+        color = (rank_kptcomm < pSPARC->size_Dscomm) ? 0 : MPI_UNDEFINED;
+        MPI_Comm_split(pSPARC->kptcomm, color, rank_kptcomm, &pSPARC->Dscomm);
+        // Using cyclic distribution 
+        pSPARC->cmc_cols = pSPARC->Nstates / size_kptcomm + ((rank_kptcomm < pSPARC->Nstates % size_kptcomm) ? 1 : 0);
+
+        if (rank_kptcomm < pSPARC->size_Dscomm) {
+            #ifndef USE_DP_SUBEIG
+            pSPARC->Hp_cmc = (double*) calloc(pSPARC->Nstates * pSPARC->Nstates, sizeof(double));
+            #endif
+            pSPARC->Ds_cmc = (double*) calloc(pSPARC->Nstates * pSPARC->cmc_cols, sizeof(double));
+        }
+
+        // Create cyclic distribution grid for Ds
+        int mb_ds, nb_ds;
+        nprow = 1;
+        npcol = pSPARC->size_Dscomm;
+        mb_ds = pSPARC->Nstates;
+        nb_ds = 1;
+
+        if (pSPARC->Dscomm != MPI_COMM_NULL){
+            pSPARC->bhandle_Ds = Csys2blacs_handle(pSPARC->Dscomm);
+            pSPARC->ictxt_Ds = pSPARC->bhandle_Ds;
+
+            Cblacs_gridinit( &pSPARC->ictxt_Ds, "Row", nprow, npcol);
+            Cblacs_gridinfo( pSPARC->ictxt_Ds, &nprow, &npcol, &myrow, &mycol );
+
+            llda = max(1, pSPARC->Nstates);
+            descinit_(pSPARC->desc_Ds, &pSPARC->Nstates, &pSPARC->Nstates, 
+                    &mb_ds, &nb_ds,  &ZERO, &ZERO, &pSPARC->ictxt_Ds, &llda, &info);   
+        } else {
+            pSPARC->ictxt_Ds = -1;
+            for (i = 0; i < 9; i++){
+                pSPARC->desc_Ds[i] = -1;
+            }
+        }
+    }
+
+
 #else // #if defined(USE_MKL) || defined(USE_SCALAPACK)
     pSPARC->useLAPACK = 1;
 #endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)

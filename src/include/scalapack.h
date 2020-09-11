@@ -22,6 +22,7 @@
 #define pdgemr2d_ pdgemr2d
 #define pdgemm_ pdgemm
 #define pdsygvx_ pdsygvx
+#define pdsyevx_ pdsyevx
 #define pzgemm_ pzgemm
 #define pzgemr2d_ pzgemr2d
 #define pzhegvx_ pzhegvx
@@ -42,11 +43,27 @@ extern int    indxg2p_();
 extern void   pdgemr2d_();
 extern void   pdgemm_();
 extern void   pdsygvx_();
+extern void   pdsyevx_();
 extern void   pdgesv_();
 extern void   pdgesvd_();
 
 extern void   pzgemr2d_();
 extern void   pzgemm_();
 extern void   pzhegvx_();
+
+extern void   pdpotrf_();
+extern void   pdtrmr2d_();
+extern void   pdtrtri_();
+extern void   pdscal_();
+
+extern void   pdgeadd_();
+extern void   pdgemv_();
+extern void   pdtrmm_();
+extern void   pdnrm2_();
+extern void   pddot_();
+extern void   pdaxpy_();
+extern void   pdcopy_();
+extern double pdlatra_();
+extern void   pdtrsm_();
 
 #endif // SCALAPACK_H

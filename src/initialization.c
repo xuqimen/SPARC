@@ -35,7 +35,7 @@
 #define min(x,y) ((x)<(y)?(x):(y))
 #define max(x,y) ((x)>(y)?(x):(y))
 
-#define N_MEMBR 114
+#define N_MEMBR 117
 
 
 
@@ -401,9 +401,9 @@ void set_defaults(SPARC_INPUT_OBJ *pSPARC_Input, SPARC_OBJ *pSPARC) {
     pSPARC_Input->range_y = -1.0;
     pSPARC_Input->range_z = -1.0;
     pSPARC_Input->BC = -1;                    // default BC will be set up after reading input
-	pSPARC_Input->BCx = -1;
-	pSPARC_Input->BCy = -1;
-	pSPARC_Input->BCz = -1;
+    pSPARC_Input->BCx = -1;
+    pSPARC_Input->BCy = -1;
+    pSPARC_Input->BCz = -1;
     // pSPARC_Input->Beta = 1000;                // electronic smearing (1/(k_B*T)) [1/Ha]
     // pSPARC_Input->elec_T = 315.7751307269723; // default electronic temperature in Kelvin
     pSPARC_Input->Beta = -1.0;                // electronic smearing (1/(k_B*T)) [1/Ha], will be specified later
@@ -467,6 +467,13 @@ void set_defaults(SPARC_INPUT_OBJ *pSPARC_Input, SPARC_OBJ *pSPARC) {
     pSPARC_Input->Printrestart_fq = 1;        // Steps after which the output is written in the restart file
     /* Default pSPARC members */
     pSPARC->is_default_psd = 0;               // default pseudopotential path is disabled
+
+    /* Eigenvalue Problem */
+    pSPARC_Input->StandardEigenFlag = 0;      // default using standard eigenvalue problem is disabled
+
+    /* Default CheFSI_SQ */
+    pSPARC_Input->SQ3Flag = 0;            // default SQ3 is disabled
+    pSPARC_Input->sq3_npl = 25;                // default degree of polynomial for SQ3 method
 }
 
 
@@ -803,6 +810,9 @@ void SPARC_copy_input(SPARC_OBJ *pSPARC, SPARC_INPUT_OBJ *pSPARC_Input) {
     pSPARC->L_lineopt = pSPARC_Input->L_lineopt;
     pSPARC->Calc_stress = pSPARC_Input->Calc_stress;
     pSPARC->Calc_pres = pSPARC_Input->Calc_pres;
+    pSPARC->StandardEigenFlag = pSPARC_Input->StandardEigenFlag;
+    pSPARC->SQ3Flag = pSPARC_Input->SQ3Flag;
+    pSPARC->sq3_npl = pSPARC_Input->sq3_npl;
     // double type values
     pSPARC->range_x = pSPARC_Input->range_x;
     pSPARC->range_y = pSPARC_Input->range_y;
@@ -1024,35 +1034,35 @@ void SPARC_copy_input(SPARC_OBJ *pSPARC, SPARC_INPUT_OBJ *pSPARC_Input) {
     // determine boundary conditions in each direction
     // BCx = 0 -> periodic, BCx = 1 -> dirichlet
     if (pSPARC->BC > 0) {
-	    if (pSPARC->BC == 1) {
-	        // dirichlet boundary
-	        pSPARC->BCx = 1; pSPARC->BCy = 1; pSPARC->BCz = 1;
-	    } else if (pSPARC->BC == 2 || pSPARC->BC == 0) {
-	        // periodic in all three directions
-	        pSPARC->BCx = 0; pSPARC->BCy = 0; pSPARC->BCz = 0;
-	    } else if (pSPARC->BC == 3) {
-	        // periodic in x and y directions
-	        pSPARC->BCx = 0; pSPARC->BCy = 0; pSPARC->BCz = 1;
-	    } else if (pSPARC->BC == 4) {
-	        // periodic in x direction
-	        pSPARC->BCx = 1; pSPARC->BCy = 1; pSPARC->BCz = 0;
-	    } else if (pSPARC->BC > 7) {
-	        exit(EXIT_FAILURE);
-	    }
-	} else if (pSPARC->BCx >= 0 && pSPARC->BCy >= 0 && pSPARC->BCz >= 0) {
-		int n_Dirichlet = pSPARC->BCx + pSPARC->BCy + pSPARC->BCz;
-		switch (n_Dirichlet) {
-			case 0: pSPARC->BC = 2; break;
-			case 1: pSPARC->BC = 3; break;
-			case 2: pSPARC->BC = 4; break;
-			case 3: pSPARC->BC = 1; break;
-			default: printf("Error in BC values\n"); break;
-		}
-	} else {
-		// if user does not provide any BC, set default to periodic in all directions
-		pSPARC->BC = 2;
-		pSPARC->BCx = pSPARC->BCy = pSPARC->BCz = 0;
-	}
+        if (pSPARC->BC == 1) {
+            // dirichlet boundary
+            pSPARC->BCx = 1; pSPARC->BCy = 1; pSPARC->BCz = 1;
+        } else if (pSPARC->BC == 2 || pSPARC->BC == 0) {
+            // periodic in all three directions
+            pSPARC->BCx = 0; pSPARC->BCy = 0; pSPARC->BCz = 0;
+        } else if (pSPARC->BC == 3) {
+            // periodic in x and y directions
+            pSPARC->BCx = 0; pSPARC->BCy = 0; pSPARC->BCz = 1;
+        } else if (pSPARC->BC == 4) {
+            // periodic in x direction
+            pSPARC->BCx = 1; pSPARC->BCy = 1; pSPARC->BCz = 0;
+        } else if (pSPARC->BC > 7) {
+            exit(EXIT_FAILURE);
+        }
+    } else if (pSPARC->BCx >= 0 && pSPARC->BCy >= 0 && pSPARC->BCz >= 0) {
+        int n_Dirichlet = pSPARC->BCx + pSPARC->BCy + pSPARC->BCz;
+        switch (n_Dirichlet) {
+            case 0: pSPARC->BC = 2; break;
+            case 1: pSPARC->BC = 3; break;
+            case 2: pSPARC->BC = 4; break;
+            case 3: pSPARC->BC = 1; break;
+            default: printf("Error in BC values\n"); break;
+        }
+    } else {
+        // if user does not provide any BC, set default to periodic in all directions
+        pSPARC->BC = 2;
+        pSPARC->BCx = pSPARC->BCy = pSPARC->BCz = 0;
+    }
 
     FDn = pSPARC->order / 2;    // half the FD order
     // calculate number of finite-difference intervals in case it's provided indirectly
@@ -2208,7 +2218,7 @@ void write_output_init(SPARC_OBJ *pSPARC) {
     }
 
     fprintf(output_fp,"***************************************************************************\n");
-    fprintf(output_fp,"*                       SPARC (version Sep 09, 2020)                      *\n");  
+    fprintf(output_fp,"*                       SPARC (version Sep 10, 2020)                      *\n");  
     fprintf(output_fp,"*   Copyright (c) 2020 Material Physics & Mechanics Group, Georgia Tech   *\n");
     fprintf(output_fp,"*           Distributed under GNU General Public License 3 (GPL)          *\n");
     fprintf(output_fp,"*                   Start time: %s                  *\n",c_time_str);
@@ -2385,6 +2395,10 @@ void write_output_init(SPARC_OBJ *pSPARC) {
     fprintf(output_fp,"REFERENCE_CUTOFF: %.10g\n",pSPARC->REFERENCE_CUTOFF);
     fprintf(output_fp,"RHO_TRIGGER: %d\n",pSPARC->rhoTrigger);
     fprintf(output_fp,"FIX_RAND: %d\n",pSPARC->FixRandSeed);
+    fprintf(output_fp,"SQ3_FLAG: %d\n",pSPARC->SQ3Flag);
+    if (pSPARC->SQ3Flag == 1)
+        fprintf(output_fp,"SQ3_NPL: %d\n",pSPARC->sq3_npl);
+    fprintf(output_fp,"STANDARD_EIGEN: %d\n",pSPARC->StandardEigenFlag);
     fprintf(output_fp,"VERBOSITY: %d\n",pSPARC->Verbosity);
     fprintf(output_fp,"PRINT_FORCES: %d\n",pSPARC->PrintForceFlag);
     fprintf(output_fp,"PRINT_ATOMS: %d\n",pSPARC->PrintAtomPosFlag);
@@ -2413,6 +2427,7 @@ void write_output_init(SPARC_OBJ *pSPARC) {
         fprintf(output_fp,"PRINT_RELAXOUT: %d\n",pSPARC->PrintRelaxout);
     }
     fprintf(output_fp,"OUTPUT_FILE: %s\n",pSPARC->filename_out);
+
     fprintf(output_fp,"***************************************************************************\n");
     fprintf(output_fp,"                           Parallelization                                 \n");
     fprintf(output_fp,"***************************************************************************\n");
@@ -2547,6 +2562,7 @@ void SPARC_Input_MPI_create(MPI_Datatype *pSPARC_INPUT_MPI) {
                                          MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,
                                          MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,
                                          MPI_INT, MPI_INT, MPI_INT, MPI_INT, MPI_INT,
+                                         MPI_INT, MPI_INT, MPI_INT,
                                          MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
                                          MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
                                          MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE, MPI_DOUBLE,
@@ -2570,7 +2586,8 @@ void SPARC_Input_MPI_create(MPI_Datatype *pSPARC_INPUT_MPI) {
                           1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1,
                           1, 1, 1, 1, 1,
-                          1, 1, 1, 1, 1, /* int */
+                          1, 1, 1, 1, 1, 
+                          1, 1, 1,         /* int */
                           1, 1, 1, 9, 1,
                           1, 3, 1, 1, 1,
                           1, 1, 1, 1, 1,
@@ -2657,6 +2674,9 @@ void SPARC_Input_MPI_create(MPI_Datatype *pSPARC_INPUT_MPI) {
     MPI_Get_address(&sparc_input_tmp.Calc_stress, addr + i++);
     MPI_Get_address(&sparc_input_tmp.Calc_pres, addr + i++);
     MPI_Get_address(&sparc_input_tmp.Poisson_solver, addr + i++);
+    MPI_Get_address(&sparc_input_tmp.StandardEigenFlag, addr + i++);
+    MPI_Get_address(&sparc_input_tmp.SQ3Flag, addr + i++);
+    MPI_Get_address(&sparc_input_tmp.sq3_npl, addr + i++);
     // double type
     MPI_Get_address(&sparc_input_tmp.range_x, addr + i++);
     MPI_Get_address(&sparc_input_tmp.range_y, addr + i++);
