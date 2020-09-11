@@ -1,0 +1,31 @@
+#PBS -N Si8
+#PBS -q hive-interact
+#PBS -o output.sparc.${PBS_JOBID}
+#PBS -j oe
+#PBS -l nodes=2:ppn=24
+#PBS -l pmem=7gb
+#PBS -l walltime=01:00:00
+
+#MYPROCS=40
+
+#module purge
+#module load git
+#module load intel/19.0.3
+#module load gcc-compatibility
+#module load mvapich2/2.3.1
+#module load valgrind
+
+ulimit -s unlimited
+
+export MV2_USE_RDMA_CM=1
+
+cd ${PBS_O_WORKDIR}
+echo $PWD
+echo "======================================================================="
+mpirun -np 12 valgrind --leak-check=full --track-origins=yes ../../../lib/sparc -name Si8-ONCV-0.4 -log_summary > Si8.log_0.4.m1.log
+
+#mpirun -np 24 valgrind --leak-check=full --track-origins=yes ../../../lib/sparc -name Si8-ONCV-0.4 -log_summary > Si8.log_0.4.m2.log
+
+mpirun -np 36 valgrind --leak-check=full --track-origins=yes ../../../lib/sparc -name Si8-ONCV-0.4 -log_summary > Si8.log_0.4.m3.log
+
+echo "======================================================================="

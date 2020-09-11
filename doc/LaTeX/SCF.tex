@@ -791,3 +791,101 @@ Flag to fix the random seeds for setting initial guesses. Once set to $1$, the r
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[allowframebreaks]{\texttt{STANDARD\_EIGEN}} \label{STANDARD_EIGEN}
+\vspace*{-12pt}
+\begin{columns}
+\column{0.4\linewidth}
+\begin{block}{Type}
+Integer
+\end{block}
+
+\begin{block}{Default}
+0
+\end{block}
+
+\column{0.4\linewidth}
+\begin{block}{Unit}
+No unit
+\end{block}
+
+\begin{block}{Example}
+\texttt{STANDARD\_EIGEN}: \texttt{1}
+\end{block}
+\end{columns}
+
+\begin{block}{Description}
+Flag to select to solve standard eigenvalue problem or generalized eigenvalue problem in standard method.
+\end{block}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[allowframebreaks]{\texttt{SQ3\_FLAG}} \label{SQ3_FLAG}
+\vspace*{-12pt}
+\begin{columns}
+\column{0.4\linewidth}
+\begin{block}{Type}
+Integer
+\end{block}
+
+\begin{block}{Default}
+0
+\end{block}
+
+\column{0.4\linewidth}
+\begin{block}{Unit}
+No unit
+\end{block}
+
+\begin{block}{Example}
+\texttt{SQ3\_FLAG}: \texttt{1}
+\end{block}
+\end{columns}
+
+\begin{block}{Description}
+Flag to indicate using SQ3 method instead of standard method.
+\end{block}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[allowframebreaks]{\texttt{SQ3\_NPL}} \label{SQ3_NPL}
+\vspace*{-12pt}
+\begin{columns}
+\column{0.4\linewidth}
+\begin{block}{Type}
+Integer
+\end{block}
+
+\begin{block}{Default}
+25
+\end{block}
+
+\column{0.4\linewidth}
+\begin{block}{Unit}
+No unit
+\end{block}
+
+\begin{block}{Example}
+\texttt{SQ3\_NPL}: \texttt{10}
+\end{block}
+\end{columns}
+
+\begin{block}{Description}
+Degree of polynomial used for Chebyshev components in SQ3 method.
+\end{block}
+
+\begin{block}{Remark}
+For higher temperature, smaller values of \texttt{SQ3\_NPL} are generally more efficient, and vice-versa.
+\end{block}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
