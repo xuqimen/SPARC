@@ -1740,6 +1740,13 @@ void SPARC_copy_input(SPARC_OBJ *pSPARC, SPARC_INPUT_OBJ *pSPARC_Input) {
         && fabs(pSPARC->k2[0]) < TEMP_TOL 
         && fabs(pSPARC->k3[0]) < TEMP_TOL);
 
+    if (pSPARC->isGammaPoint != 1 && pSPARC->SQ3Flag == 1){
+        printf(RED "Error: Kpoint is not supported in this version of SQ method.\n"
+            "Please turn it off by setting KPOINT_GRID: 1 1 1, \n"
+            "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
+        exit(EXIT_FAILURE);
+    }
+    
     // estimate memory usage
     double memory_usage = estimate_memory(pSPARC);
     pSPARC->memory_usage = memory_usage;

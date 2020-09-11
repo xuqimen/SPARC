@@ -554,13 +554,6 @@ void read_input(SPARC_INPUT_OBJ *pSPARC_Input, SPARC_OBJ *pSPARC) {
             "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
         exit(EXIT_FAILURE);
     }
-    
-    if (pSPARC_Input->Nkpts > 1 && pSPARC_Input->SQ3Flag == 1){
-        printf(RED "Error: Kpoint is not supported in this version of SQ method.\n"
-            "Please turn it off by setting KPOINT_GRID: 1 1 1, \n"
-            "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
-        exit(EXIT_FAILURE);
-    }
 
     if (pSPARC_Input->Calc_stress == 1 && pSPARC_Input->SQ3Flag == 1){
         printf(RED "Error: Stress is not implemented in this version of SQ method!\n"
