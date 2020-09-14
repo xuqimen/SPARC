@@ -18,10 +18,12 @@
  */
 void SQ3(SPARC_OBJ *pSPARC, int spn_i);
 
+#if defined(USE_MKL) || defined(USE_SCALAPACK)
 /**
  * @brief   Initialze communicators for SQ3 and allocate memory space.
  */
 void init_SQ3(SPARC_OBJ *pSPARC);
+#endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
 
 /**
  * @brief   Orthogonalization of dense matrix A by Choleskey factorization
