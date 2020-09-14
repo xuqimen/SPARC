@@ -1756,7 +1756,7 @@ void SPARC_copy_input(SPARC_OBJ *pSPARC, SPARC_INPUT_OBJ *pSPARC_Input) {
     if (pSPARC->isGammaPoint != 1 && pSPARC->SQ3Flag == 1){
         if (rank == 0)
             printf(RED "Error: Kpoint is not supported in this version of SQ method.\n"
-                "Please turn it off by setting KPOINT_GRID: 1 1 1, \n"
+                "Please turn it off by setting KPOINT_GRID: 1 1 1, and KPOINT_SHIFT: 0 0 0,\n"
                 "or using standard method by setting SQ3_FLAG: 0.\n" RESET);
         exit(EXIT_FAILURE);
     }
@@ -1775,6 +1775,10 @@ void SPARC_copy_input(SPARC_OBJ *pSPARC, SPARC_INPUT_OBJ *pSPARC_Input) {
                 "Please turn it off by setting CALC_STRESS: 0, \n"
                 "or using standard method by setting SQ3_FLAG: 0.\n " RESET);
         exit(EXIT_FAILURE);
+    }
+
+    if (pSPARC->SQ3Flag == 1) {
+        pSPARC->StandardEigenFlag = 1;    
     }
 }
 
@@ -2251,7 +2255,7 @@ void write_output_init(SPARC_OBJ *pSPARC) {
     }
 
     fprintf(output_fp,"***************************************************************************\n");
-    fprintf(output_fp,"*                       SPARC (version Sep 10, 2020)                      *\n");  
+    fprintf(output_fp,"*                       SPARC (version Sep 14, 2020)                      *\n");  
     fprintf(output_fp,"*   Copyright (c) 2020 Material Physics & Mechanics Group, Georgia Tech   *\n");
     fprintf(output_fp,"*           Distributed under GNU General Public License 3 (GPL)          *\n");
     fprintf(output_fp,"*                   Start time: %s                  *\n",c_time_str);
@@ -2428,10 +2432,12 @@ void write_output_init(SPARC_OBJ *pSPARC) {
     fprintf(output_fp,"REFERENCE_CUTOFF: %.10g\n",pSPARC->REFERENCE_CUTOFF);
     fprintf(output_fp,"RHO_TRIGGER: %d\n",pSPARC->rhoTrigger);
     fprintf(output_fp,"FIX_RAND: %d\n",pSPARC->FixRandSeed);
-    fprintf(output_fp,"SQ3_FLAG: %d\n",pSPARC->SQ3Flag);
-    if (pSPARC->SQ3Flag == 1)
+    if (pSPARC->SQ3Flag == 1) {
+        fprintf(output_fp,"SQ3_FLAG: %d\n",pSPARC->SQ3Flag);
         fprintf(output_fp,"SQ3_NPL: %d\n",pSPARC->sq3_npl);
-    fprintf(output_fp,"STANDARD_EIGEN: %d\n",pSPARC->StandardEigenFlag);
+    }
+    if (pSPARC->StandardEigenFlag == 1)
+        fprintf(output_fp,"STANDARD_EIGEN: %d\n",pSPARC->StandardEigenFlag);
     fprintf(output_fp,"VERBOSITY: %d\n",pSPARC->Verbosity);
     fprintf(output_fp,"PRINT_FORCES: %d\n",pSPARC->PrintForceFlag);
     fprintf(output_fp,"PRINT_ATOMS: %d\n",pSPARC->PrintAtomPosFlag);

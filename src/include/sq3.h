@@ -19,6 +19,11 @@
 void SQ3(SPARC_OBJ *pSPARC, int spn_i);
 
 /**
+ * @brief   Initialze communicators for SQ3 and allocate memory space.
+ */
+void init_SQ3(SPARC_OBJ *pSPARC);
+
+/**
  * @brief   Orthogonalization of dense matrix A by Choleskey factorization
  * 
  * @param A            (INPUT)  Distributed dense matrix A.
@@ -36,7 +41,7 @@ void Chol_orth(double *A, const int *descA, double *z, const int *descz, const i
  */
 void DP_Dist2SQ(SPARC_OBJ *pSPARC);
 
-void DP_Project_Hamiltonian_SQ3(SPARC_OBJ *pSPARC, int *DMVertices, double *Y, int spn_i);
+void DP_Project_Hamiltonian_std(SPARC_OBJ *pSPARC, int *DMVertices, double *Y, int spn_i);
 #else
 /**
  * @brief   Distribute projected Hamiltonian and Density matrix
@@ -124,5 +129,10 @@ double Calculate_electronicEntropy_sq(SPARC_OBJ *pSPARC, CHEBCOMP *cc);
  * @brief   Free memory space of Chebyshev components
  */
 void free_ChemComp(SPARC_OBJ *pSPARC);
+
+/**
+ * @brief   Free memory space and communicators for SQ3.
+ */
+void free_SQ3(SPARC_OBJ *pSPARC);
 
 #endif // EIGENSOLVER_H 

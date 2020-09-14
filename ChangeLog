@@ -3,6 +3,16 @@
 -Name
 -changes
 
+
+--------------
+Sep 14, 2020
+Name: Qimen Xu
+Changes: (sq3.c, sq3.h, eigensolver.c, finalization.c, initialization.c, parallelization.c)
+1. Some modifications to SQ3: 
+  (a) move some initialization and finalization procedures in SQ3 method to sq3.c.
+  (b) turn on standard_eig when sq3 is on.
+
+
 --------------
 Sep 10, 2020
 Name: Xin Jing

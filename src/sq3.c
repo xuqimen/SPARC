@@ -123,6 +123,155 @@ void SQ3(SPARC_OBJ *pSPARC, int spn_i)
 }
 
 /**
+ * @brief   Initialze communicators for SQ3 and allocate memory space.
+ */
+void init_SQ3(SPARC_OBJ *pSPARC)
+{
+    int rank, size_kptcomm, nproc_kptcomm, rank_kptcomm;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank(pSPARC->kptcomm, &rank_kptcomm);
+    MPI_Comm_size(pSPARC->kptcomm, &nproc_kptcomm);
+    size_kptcomm = nproc_kptcomm;
+    if (pSPARC->kptcomm_index != -1){
+        // initialize kptcomm grid
+        pSPARC->bhandle_kptcomm = Csys2blacs_handle(pSPARC->kptcomm);
+        pSPARC->ictxt_kptcomm = pSPARC->bhandle_kptcomm;
+
+        Cblacs_gridinit( &pSPARC->ictxt_kptcomm, "Row", 1, size_kptcomm);
+    } else {
+        pSPARC->ictxt_kptcomm = -1;
+    }
+
+    int nprow, npcol, myrow, mycol, info, ZERO = 0, llda;
+
+    // set up a square grid for the matrix operation on Hp
+    int mb_SQ, nb_SQ;
+    // using the largest square grid for Hp_SQ
+    nprow = npcol = (int)sqrt((double)size_kptcomm);
+    #ifdef DEBUG
+    if (!rank) printf("SQ grid size: %d x %d\n", nprow, npcol);
+    #endif
+    mb_SQ = nb_SQ = pSPARC->Nstates / nprow;
+
+    if (pSPARC->kptcomm_index != -1){
+        // initialize SQ grid
+        pSPARC->bhandle_SQ = Csys2blacs_handle(pSPARC->kptcomm);
+        pSPARC->ictxt_SQ = pSPARC->bhandle_SQ;
+        
+        Cblacs_gridinit( &pSPARC->ictxt_SQ, "Row", nprow, npcol);
+        Cblacs_gridinfo( pSPARC->ictxt_SQ, &nprow, &npcol, &myrow, &mycol );
+
+        // Construct SQ_comm including only processors within SQ_comm
+        MPI_Group kptgroup, SQ_group;
+        MPI_Comm_group(pSPARC->kptcomm, &kptgroup);
+        int *incl_ranks = (int*) calloc(nprow*npcol, sizeof(int));
+        for (int i = 0; i < nprow*npcol; i++)
+            incl_ranks[i] = i;
+
+        MPI_Group_incl(kptgroup, nprow*npcol, incl_ranks, &SQ_group);
+        free(incl_ranks);
+
+        MPI_Comm_create(pSPARC->kptcomm, SQ_group, &pSPARC->SQcomm);
+        MPI_Group_free(&kptgroup);
+        MPI_Group_free(&SQ_group);
+
+        // calculating the local size for projected Hamiltonian 
+        if (pSPARC->ictxt_SQ > -1){
+            pSPARC->nr_Hp_SQ = numroc_( &pSPARC->Nstates, &mb_SQ, &myrow, &ZERO, &nprow );
+            pSPARC->nc_Hp_SQ = numroc_( &pSPARC->Nstates, &nb_SQ, &mycol, &ZERO, &npcol );
+            llda = max(1,pSPARC->nr_Hp_SQ);
+            descinit_(pSPARC->desc_Hp_SQ, &pSPARC->Nstates, &pSPARC->Nstates, 
+                    &mb_SQ, &nb_SQ,  &ZERO, &ZERO, &pSPARC->ictxt_SQ, &llda, &info);
+        } else {
+            pSPARC->nr_Hp_SQ = pSPARC->nc_Hp_SQ = 0;
+            for (int i = 0; i < 9; i++){
+                pSPARC->desc_Hp_SQ[i] = -1;
+            }
+        }
+    } else {
+        // Suggest to set default values -1 rather than 0
+        pSPARC->ictxt_SQ = -1;
+        pSPARC->nr_Hp_SQ = pSPARC->nc_Hp_SQ = 0;
+        for (int i = 0; i < 9; i++){
+            pSPARC->desc_Hp_SQ[i] = -1;
+        }
+        pSPARC->SQcomm = MPI_COMM_NULL;
+    }
+
+    // Allocating memory space for Hp
+    pSPARC->Hp_SQ = (double*) calloc(pSPARC->nr_Hp_SQ * pSPARC->nc_Hp_SQ, sizeof(double));
+
+    // set up a context with single processor to receive entire density matrix Ds
+    int mb_cmc, nb_cmc;
+    nprow = npcol = 1;
+    mb_cmc = nb_cmc = pSPARC->Nstates;
+
+    if (pSPARC->kptcomm_index != -1){
+        pSPARC->bhandle_cmc = Csys2blacs_handle(pSPARC->kptcomm);
+        pSPARC->ictxt_cmc = pSPARC->bhandle_cmc;
+
+        Cblacs_gridinit( &pSPARC->ictxt_cmc, "Row", nprow, npcol);
+        Cblacs_gridinfo( pSPARC->ictxt_cmc, &nprow, &npcol, &myrow, &mycol );
+
+        if (pSPARC->ictxt_cmc > -1){
+            llda = max(1, pSPARC->Nstates);
+            descinit_(pSPARC->desc_Hp_cmc, &pSPARC->Nstates, &pSPARC->Nstates, 
+                    &mb_cmc, &nb_cmc,  &ZERO, &ZERO, &pSPARC->ictxt_cmc, &llda, &info);   
+        } else {
+            for (int i = 0; i < 9; i++){
+                pSPARC->desc_Hp_cmc[i] = -1;
+            }
+        }
+    } else {
+        pSPARC->ictxt_cmc = -1;
+        for (int i = 0; i < 9; i++){
+            pSPARC->desc_Hp_cmc[i] = -1;
+        }
+    }
+
+    // Construct Dscomm only including processors using in calculating density matrix Ds
+    pSPARC->size_Dscomm = min(nproc_kptcomm, pSPARC->Nstates);
+    #ifdef DEBUG
+    if (!rank) printf("Using %d processors to calculate Ds\n", pSPARC->size_Dscomm);
+    #endif
+    int color = (rank_kptcomm < pSPARC->size_Dscomm) ? 0 : MPI_UNDEFINED;
+    MPI_Comm_split(pSPARC->kptcomm, color, rank_kptcomm, &pSPARC->Dscomm);
+    // Using cyclic distribution 
+    pSPARC->cmc_cols = pSPARC->Nstates / size_kptcomm + ((rank_kptcomm < pSPARC->Nstates % size_kptcomm) ? 1 : 0);
+
+    if (rank_kptcomm < pSPARC->size_Dscomm) {
+        #ifndef USE_DP_SUBEIG
+        pSPARC->Hp_cmc = (double*) calloc(pSPARC->Nstates * pSPARC->Nstates, sizeof(double));
+        #endif
+        pSPARC->Ds_cmc = (double*) calloc(pSPARC->Nstates * pSPARC->cmc_cols, sizeof(double));
+    }
+
+    // Create cyclic distribution grid for Ds
+    int mb_ds, nb_ds;
+    nprow = 1;
+    npcol = pSPARC->size_Dscomm;
+    mb_ds = pSPARC->Nstates;
+    nb_ds = 1;
+
+    if (pSPARC->Dscomm != MPI_COMM_NULL){
+        pSPARC->bhandle_Ds = Csys2blacs_handle(pSPARC->Dscomm);
+        pSPARC->ictxt_Ds = pSPARC->bhandle_Ds;
+
+        Cblacs_gridinit( &pSPARC->ictxt_Ds, "Row", nprow, npcol);
+        Cblacs_gridinfo( pSPARC->ictxt_Ds, &nprow, &npcol, &myrow, &mycol );
+
+        llda = max(1, pSPARC->Nstates);
+        descinit_(pSPARC->desc_Ds, &pSPARC->Nstates, &pSPARC->Nstates, 
+                &mb_ds, &nb_ds,  &ZERO, &ZERO, &pSPARC->ictxt_Ds, &llda, &info);   
+    } else {
+        pSPARC->ictxt_Ds = -1;
+        for (int i = 0; i < 9; i++){
+            pSPARC->desc_Ds[i] = -1;
+        }
+    }
+}
+
+/**
  * @brief   Orthogonalization of dense matrix A by Choleskey factorization
  */
 void Chol_orth(double *A, const int *descA, double *z, const int *descz, const int *m, const int *n)
@@ -156,7 +305,7 @@ void DP_Dist2SQ(SPARC_OBJ *pSPARC)
 #endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
 }
 
-void DP_Project_Hamiltonian_SQ3(SPARC_OBJ *pSPARC, int *DMVertices, double *Y, int spn_i)
+void DP_Project_Hamiltonian_std(SPARC_OBJ *pSPARC, int *DMVertices, double *Y, int spn_i)
 {
     DP_CheFSI_t DP_CheFSI = (DP_CheFSI_t) pSPARC->DP_CheFSI;
     if (DP_CheFSI == NULL) return;
@@ -833,4 +982,47 @@ void free_ChemComp(SPARC_OBJ *pSPARC)
         free(pSPARC->ChebComp[i].tr_Ti);
     }
     free(pSPARC->ChebComp);
+}
+
+
+/**
+ * @brief   Free memory space and communicators for SQ3.
+ */
+void free_SQ3(SPARC_OBJ *pSPARC)
+{
+    if (pSPARC->isGammaPoint)
+        if (pSPARC->dmcomm != MPI_COMM_NULL) 
+            free(pSPARC->Zorb);
+
+    free_ChemComp(pSPARC);
+#if defined(USE_MKL) || defined(USE_SCALAPACK)
+    if (pSPARC->kptcomm_index != -1){
+        // Cfree_blacs_system_handle(pSPARC->bhandle_kptcomm);
+        if (pSPARC->ictxt_kptcomm > -1)
+            Cblacs_gridexit(pSPARC->ictxt_kptcomm);
+        
+        // Cfree_blacs_system_handle(pSPARC->bhandle_SQ);
+        if (pSPARC->ictxt_SQ > -1)
+            Cblacs_gridexit(pSPARC->ictxt_SQ);
+        
+        Cfree_blacs_system_handle(pSPARC->bhandle_cmc);
+        if (pSPARC->ictxt_cmc > -1)
+            Cblacs_gridexit(pSPARC->ictxt_cmc);
+
+        Cfree_blacs_system_handle(pSPARC->bhandle_Ds);
+        if (pSPARC->ictxt_Ds > -1)
+            Cblacs_gridexit(pSPARC->ictxt_Ds);
+    }
+#endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
+    free(pSPARC->Hp_SQ);
+    if (pSPARC->SQcomm != MPI_COMM_NULL)
+        MPI_Comm_free(&pSPARC->SQcomm);   
+
+    if (pSPARC->Dscomm != MPI_COMM_NULL){
+        MPI_Comm_free(&pSPARC->Dscomm);  
+        #ifndef USE_DP_SUBEIG
+        free(pSPARC->Hp_cmc);
+        #endif
+        free(pSPARC->Ds_cmc);
+    }
 }

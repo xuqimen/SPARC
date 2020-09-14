@@ -278,41 +278,7 @@ void Free_SPARC(SPARC_OBJ *pSPARC) {
     }
     
     if (pSPARC->SQ3Flag == 1){
-        if (pSPARC->isGammaPoint)
-            if (pSPARC->dmcomm != MPI_COMM_NULL) 
-                free(pSPARC->Zorb);
-
-        free_ChemComp(pSPARC);
-    #if defined(USE_MKL) || defined(USE_SCALAPACK)
-        if (pSPARC->kptcomm_index != -1){
-            // Cfree_blacs_system_handle(pSPARC->bhandle_kptcomm);
-            if (pSPARC->ictxt_kptcomm > -1)
-                Cblacs_gridexit(pSPARC->ictxt_kptcomm);
-            
-            // Cfree_blacs_system_handle(pSPARC->bhandle_SQ);
-            if (pSPARC->ictxt_SQ > -1)
-                Cblacs_gridexit(pSPARC->ictxt_SQ);
-            
-            Cfree_blacs_system_handle(pSPARC->bhandle_cmc);
-            if (pSPARC->ictxt_cmc > -1)
-                Cblacs_gridexit(pSPARC->ictxt_cmc);
-
-            Cfree_blacs_system_handle(pSPARC->bhandle_Ds);
-            if (pSPARC->ictxt_Ds > -1)
-                Cblacs_gridexit(pSPARC->ictxt_Ds);
-        }
-    #endif // #if defined(USE_MKL) || defined(USE_SCALAPACK)
-        free(pSPARC->Hp_SQ);
-        if (pSPARC->SQcomm != MPI_COMM_NULL)
-            MPI_Comm_free(&pSPARC->SQcomm);   
-
-        if (pSPARC->Dscomm != MPI_COMM_NULL){
-            MPI_Comm_free(&pSPARC->Dscomm);  
-            #ifndef USE_DP_SUBEIG
-            free(pSPARC->Hp_cmc);
-            #endif
-            free(pSPARC->Ds_cmc);
-        }
+        free_SQ3(pSPARC);
     }
 
     // free communicators

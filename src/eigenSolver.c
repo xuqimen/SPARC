@@ -345,7 +345,7 @@ void CheFSI(SPARC_OBJ *pSPARC, double lambda_cutoff, double *x0, int count, int 
     // ** calculate projected Hamiltonian and overlap matrix ** //
     #ifdef USE_DP_SUBEIG
     if (pSPARC->SQ3Flag == 1 || pSPARC->StandardEigenFlag == 1)
-        DP_Project_Hamiltonian_SQ3(
+        DP_Project_Hamiltonian_std(
             pSPARC, pSPARC->DMVertices_dmcomm, pSPARC->Yorb + spn_i*size_s, 
             spn_i
         );
