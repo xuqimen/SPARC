@@ -21,6 +21,7 @@
 #include "eigenSolver.h"
 #include "eigenSolverKpt.h" 
 #include "isddft.h"
+#include "sq3.h"
 
 
 
@@ -35,6 +36,11 @@ void Calculate_elecDens(int rank, SPARC_OBJ *pSPARC, int SCFcount, double error)
     // Currently only involves Chebyshev filtering eigensolver
     if (pSPARC->isGammaPoint){
         eigSolve_CheFSI(rank, pSPARC, SCFcount, error);
+
+        if(pSPARC->SQ3Flag == 1){
+            SubDensMat(pSPARC, pSPARC->Ds_cmc, pSPARC->Efermi, pSPARC->ChebComp);
+        }
+
         if(pSPARC->spin_typ == 0)
             CalculateDensity_psi(pSPARC, rho);
         else
@@ -79,9 +85,9 @@ void CalculateDensity_psi(SPARC_OBJ *pSPARC, double *rho)
 {
     if (pSPARC->bandcomm_index < 0 || pSPARC->dmcomm == MPI_COMM_NULL) return;
     
-    int i, n, Nd, count, nstart, nend;
+    int i, n, Ns, Nd, count, nstart, nend;
     double g_nk;
-    // Ns = pSPARC->Nstates;
+    Ns = pSPARC->Nstates;
     Nd = pSPARC->Nd_d_dmcomm;
     nstart = pSPARC->band_start_indx;
     nend = pSPARC->band_end_indx;
@@ -93,13 +99,19 @@ void CalculateDensity_psi(SPARC_OBJ *pSPARC, double *rho)
     
     t1 = MPI_Wtime();
     // calculate rho based on local bands
-    count = 0;
-    for (n = nstart; n <= nend; n++) {
-        // g_nk = 2.0 * smearing_FermiDirac(pSPARC->Beta,pSPARC->lambda[n],pSPARC->Efermi);
-        g_nk = 2.0 * pSPARC->occ[n];
-        for (i = 0; i < Nd; i++, count++) {
-            rho[i] += g_nk * pSPARC->Xorb[count] * pSPARC->Xorb[count];
+    if (pSPARC->SQ3Flag == 0){
+        count = 0;
+        for (n = nstart; n <= nend; n++) {
+            // g_nk = 2.0 * smearing_FermiDirac(pSPARC->Beta,pSPARC->lambda[n],pSPARC->Efermi);
+            g_nk = 2.0 * pSPARC->occ[n];
+            for (i = 0; i < Nd; i++, count++) {
+                rho[i] += g_nk * pSPARC->Xorb[count] * pSPARC->Xorb[count];
+            }
         }
+    } else {
+        
+        update_rho_psi(pSPARC, rho, Nd, Ns, nstart, nend);
+
     }
     t2 = MPI_Wtime();
 
@@ -130,7 +142,7 @@ void CalculateDensity_psi(SPARC_OBJ *pSPARC, double *rho)
     for (i = 0; i < pSPARC->Nd_d_dmcomm; i++) {
         rho[i] *= vscal; 
     }
-    
+
     t2 = MPI_Wtime();
 #ifdef DEBUG
     if (!rank) printf("rank = %d, --- Scale rho: scale by 1/dV took %.3f ms\n", rank, (t2-t1)*1e3);

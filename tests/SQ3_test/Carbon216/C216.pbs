@@ -1,0 +1,25 @@
+#PBS -N C_old
+#PBS -q hive-interact
+#PBS -o output.sparc
+#PBS -j oe
+#PBS -l nodes=6:ppn=24
+#PBS -l pmem=7gb
+#PBS -l walltime=01:00:00
+
+MYPROCS=128
+
+#module purge
+#module load intel
+#module load gcc-compatibility
+#module load mvapich2
+#module load fftw
+
+ulimit -s unlimited
+
+export MV2_USE_RDMA_CM=1
+
+cd ${PBS_O_WORKDIR}
+echo $PWD
+echo "======================================================================="
+mpirun -np $MYPROCS ../../../lib/sparc -name C216 -log_summary > C216.${PBS_JOBID}.log
+echo "======================================================================="

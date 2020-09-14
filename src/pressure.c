@@ -521,17 +521,26 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
     DMny = pSPARC->Ny_d_dmcomm;
     size_s = ncol * DMnd;
     
-    double pressure_nloc = 0.0, *alpha, *beta, *x_ptr, *dx_ptr, *x_rc, *dx_rc, *x_rc_ptr, *dx_rc_ptr, R1, R2, R3;
+    double pressure_nloc = 0.0, *alpha, *alpha2, *beta, *beta2, *x_ptr, *dx_ptr, *x_rc, *dx_rc, *x_rc_ptr, *dx_rc_ptr, R1, R2, R3;
     double pJ, eJ, temp_e, temp_p, temp2_e, temp2_p, g_nk, *beta_x, *beta_y,
            *beta_z;
     
     alpha = (double *)calloc( pSPARC->IP_displ[pSPARC->n_atom] * ncol * nspin * 4, sizeof(double));
+    if (pSPARC->SQ3Flag == 1)
+        alpha2 = (double *)calloc( pSPARC->IP_displ[pSPARC->n_atom] * ncol * nspin, sizeof(double));
+
 #ifdef DEBUG 
     if (!rank) printf("Start Calculating nonlocal pressure\n");
 #endif
+
+    double *XorY = (pSPARC->SQ3Flag == 0) ? pSPARC->Xorb : pSPARC->Yorb;
+    double *YorZ = (pSPARC->SQ3Flag == 0) ? pSPARC->Yorb : pSPARC->Zorb;
+    
     count = 0;
     for(spn_i = 0; spn_i < nspin; spn_i++) {
         beta = alpha + pSPARC->IP_displ[pSPARC->n_atom] * ncol * count;
+        if (pSPARC->SQ3Flag == 1)   
+            beta2 = alpha2 + pSPARC->IP_displ[pSPARC->n_atom] * ncol * count;
         for (ityp = 0; ityp < pSPARC->Ntypes; ityp++) {
             if (!pSPARC->nlocProj[ityp].nproj) continue; // this is typical for hydrogen
             for (iat = 0; iat < pSPARC->Atom_Influence_nloc[ityp].n_atom; iat++) {
@@ -549,8 +558,20 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
                 }
                 cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, pSPARC->nlocProj[ityp].nproj, ncol, ndc, pSPARC->dV, pSPARC->nlocProj[ityp].Chi[iat], ndc, 
                             x_rc, ndc, 1.0, beta+pSPARC->IP_displ[atom_index]*ncol, pSPARC->nlocProj[ityp].nproj); // multiply dV to get inner-product
+
+                if (pSPARC->SQ3Flag == 1){
+                    for (n = 0; n < ncol; n++) {
+                        x_ptr = pSPARC->Yorb + spn_i * size_s + n * DMnd;
+                        x_rc_ptr = x_rc + n * ndc;
+                        for (i = 0; i < ndc; i++) {
+                            *(x_rc_ptr + i) = *(x_ptr + pSPARC->Atom_Influence_nloc[ityp].grid_pos[iat][i]);
+                        }
+                    }
+                    cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, pSPARC->nlocProj[ityp].nproj, ncol, ndc, pSPARC->dV, pSPARC->nlocProj[ityp].Chi[iat], ndc, 
+                                x_rc, ndc, 1.0, beta2+pSPARC->IP_displ[atom_index]*ncol, pSPARC->nlocProj[ityp].nproj); // multiply dV to get inner-product
+                }
+
                 free(x_rc);
-                
             }
         }
         count++;
@@ -561,7 +582,7 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
         count = 0;
         for(spn_i = 0; spn_i < nspin; spn_i++) {
         // find dPsi in direction dim
-            Gradient_vectors_dir(pSPARC, DMnd, pSPARC->DMVertices_dmcomm, ncol, 0.0, pSPARC->Xorb+spn_i*size_s, pSPARC->Yorb+spn_i*size_s, dim, pSPARC->dmcomm);
+            Gradient_vectors_dir(pSPARC, DMnd, pSPARC->DMVertices_dmcomm, ncol, 0.0, XorY+spn_i*size_s, YorZ+spn_i*size_s, dim, pSPARC->dmcomm);
             beta = alpha + pSPARC->IP_displ[pSPARC->n_atom] * ncol * (nspin * (dim+1) + count);
             for (ityp = 0; ityp < pSPARC->Ntypes; ityp++) {
                 if (! pSPARC->nlocProj[ityp].nproj) continue; // this is typical for hydrogen
@@ -573,7 +594,7 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
                     dx_rc = (double *)malloc( ndc * ncol * sizeof(double));
                     atom_index = pSPARC->Atom_Influence_nloc[ityp].atom_index[iat];
                     for (n = 0; n < ncol; n++) {
-                        dx_ptr = pSPARC->Yorb + spn_i * size_s + n * DMnd;
+                        dx_ptr = YorZ + spn_i * size_s + n * DMnd;
                         dx_rc_ptr = dx_rc + n * ndc;
                         for (i = 0; i < ndc; i++) {
                             indx = pSPARC->Atom_Influence_nloc[ityp].grid_pos[iat][i];
@@ -616,15 +637,15 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
     beta_x = alpha + pSPARC->IP_displ[pSPARC->n_atom]*ncol*nspin;
     beta_y = alpha + pSPARC->IP_displ[pSPARC->n_atom]*ncol*nspin * 2;
     beta_z = alpha + pSPARC->IP_displ[pSPARC->n_atom]*ncol*nspin * 3;
-    count = 0;
     
+    count = 0;
     for(spn_i = 0; spn_i < nspin; spn_i++) {
         for (ityp = 0; ityp < pSPARC->Ntypes; ityp++) {
             lmax = pSPARC->psd[ityp].lmax;
             for (iat = 0; iat < pSPARC->nAtomv[ityp]; iat++) {
             	eJ = pJ = 0.0;
                 for (n = pSPARC->band_start_indx; n <= pSPARC->band_end_indx; n++) {
-                    g_nk = pSPARC->occ[spn_i*Ns + n];
+                    g_nk = (pSPARC->SQ3Flag == 0) ? pSPARC->occ[spn_i*pSPARC->Nstates+n] : 1;
                     temp2_e = temp2_p = 0.0;
                     ldispl = 0;
                     for (l = 0; l <= lmax; l++) {
@@ -636,7 +657,10 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
                         for (np = 0; np < pSPARC->psd[ityp].ppl[l]; np++) {
                             temp_e = temp_p = 0.0;
                             for (m = -l; m <= l; m++) {
-                                temp_e += alpha[count] * alpha[count];
+                                if (pSPARC->SQ3Flag == 0)
+                                    temp_e += alpha[count] * alpha[count];
+                                else 
+                                    temp_e += alpha[count] * alpha2[count];
                                 temp_p += alpha[count] * (beta_x[count] + beta_y[count] + beta_z[count]);
                                 count++;
                             }
@@ -685,6 +709,8 @@ void Calculate_nonlocal_pressure(SPARC_OBJ *pSPARC)
     
     
     free(alpha);
+    if (pSPARC->SQ3Flag == 1)
+        free(alpha2);
 }
 
 

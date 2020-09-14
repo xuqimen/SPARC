@@ -44,7 +44,7 @@ ifeq ($(USE_MKL), 0)
 # if you are using BLAS instead of OpenBLAS, change -lopenblas to -lblas
 # and move it to after -llapack
 LDLIBS += -lopenblas -llapacke -llapack -lm
-#LDLIBS += -llapacke -llapack -lblas -lm
+# LDLIBS += -llapacke -llapack -lblas -lm
 endif
 
 # To use domain parallelization + LAPACK for solving sobspace eigen problem
@@ -65,7 +65,7 @@ OBJSC = main.o initialization.o readfiles.o atomdata.o parallelization.o relax.o
         occupation.o lapVecRoutines.o gradVecRoutines.o gradVecRoutinesKpt.o nlocVecRoutines.o   \
         hamiltonianVecRoutines.o lapVecOrth.o lapVecOrthKpt.o lapVecNonOrth.o lapVecNonOrthKpt.o \
         linearSolver.o mixing.o exchangeCorrelation.o eigenSolver.o eigenSolverKpt.o energy.o    \
-        forces.o stress.o pressure.o finalization.o
+        forces.o stress.o pressure.o finalization.o sq3.o
 
 LIBBASE = ../lib/sparc
 TESTBASE = ../.ci

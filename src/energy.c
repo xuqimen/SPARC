@@ -19,6 +19,7 @@
 #include "occupation.h"
 #include "tools.h"
 #include "isddft.h"
+#include "sq3.h"
 
 #define TEMP_TOL (1e-14)
 
@@ -47,15 +48,20 @@ void Calculate_Free_Energy(SPARC_OBJ *pSPARC, double *electronDens)
     // band structure energy
     //Eband = Calculate_Eband(pSPARC);
     if (pSPARC->isGammaPoint) { // for gamma-point systems
-        for (spn_i = 0; spn_i < pSPARC->Nspin_spincomm; spn_i++) {
-            for (n = 0; n < Ns; n++) {
-                // Eband += 2.0 * smearing_FermiDirac(pSPARC->Beta, pSPARC->lambda[n], pSPARC->Efermi) * pSPARC->lambda[n];
-                Eband += (2.0/pSPARC->Nspin) * pSPARC->occ[n+spn_i*Ns] * pSPARC->lambda[n+spn_i*Ns];
+        if (pSPARC->SQ3Flag == 0){
+            for (spn_i = 0; spn_i < pSPARC->Nspin_spincomm; spn_i++) {
+                for (n = 0; n < Ns; n++) {
+                    // Eband += 2.0 * smearing_FermiDirac(pSPARC->Beta, pSPARC->lambda[n], pSPARC->Efermi) * pSPARC->lambda[n];
+                    Eband += (2.0/pSPARC->Nspin) * pSPARC->occ[n+spn_i*Ns] * pSPARC->lambda[n+spn_i*Ns];
+                }
             }
+            if (pSPARC->npspin != 1) { // sum over processes with the same rank in spincomm to find Eband
+                MPI_Allreduce(MPI_IN_PLACE, &Eband, 1, MPI_DOUBLE, MPI_SUM, pSPARC->spin_bridge_comm);
+            }    
+        } else {
+            Eband = Calculate_Eband_sq(pSPARC, pSPARC->ChebComp);
         }
-        if (pSPARC->npspin != 1) { // sum over processes with the same rank in spincomm to find Eband
-            MPI_Allreduce(MPI_IN_PLACE, &Eband, 1, MPI_DOUBLE, MPI_SUM, pSPARC->spin_bridge_comm);
-        }    
+        
     } else { // for k-points
         for (spn_i = 0; spn_i < pSPARC->Nspin_spincomm; spn_i++) {
             for (k = 0; k < Nk; k++) {
@@ -80,7 +86,11 @@ void Calculate_Free_Energy(SPARC_OBJ *pSPARC, double *electronDens)
     pSPARC->Eband = Eband;
     
     // calculate entropy
-    pSPARC->Entropy = Calculate_electronicEntropy(pSPARC);
+    if (pSPARC->SQ3Flag == 0)
+        pSPARC->Entropy = Calculate_electronicEntropy(pSPARC);
+    else{ 
+        pSPARC->Entropy = Calculate_electronicEntropy_sq(pSPARC, pSPARC->ChebComp);     
+    }
     
     if (pSPARC->dmcomm_phi != MPI_COMM_NULL) {
         VectorDotProduct(pSPARC->psdChrgDens, pSPARC->elecstPotential, pSPARC->Nd_d, &E1, pSPARC->dmcomm_phi);

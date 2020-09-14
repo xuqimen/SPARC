@@ -219,6 +219,13 @@ void Init_orbital(SPARC_OBJ *pSPARC)
                     printf("\nMemory allocation failed!\n");
                     exit(EXIT_FAILURE);
                 }
+                if (pSPARC->SQ3Flag == 1){
+                    pSPARC->Zorb = (double *)malloc( max(len_tot,DMnd) * sizeof(double) ); 
+                    if (pSPARC->Zorb == NULL) {
+                        printf("\nMemory allocation failed!\n");
+                        exit(EXIT_FAILURE);
+                    }
+                }
 
                 // set random initial orbitals
                 // notes: 1. process not in dmcomm will have 0 row of bands, hence no orbitals assigned

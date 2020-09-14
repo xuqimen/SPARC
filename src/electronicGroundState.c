@@ -36,6 +36,7 @@
 #include "forces.h"
 #include "stress.h"
 #include "pressure.h"
+#include "sq3.h"
 
 #ifdef USE_EVA_MODULE
 #include "ExtVecAccel/ExtVecAccel.h"
@@ -422,6 +423,13 @@ void scf(SPARC_OBJ *pSPARC)
     double error, dEtot, dEband, temp;
     error = pSPARC->TOL_SCF + 1.0;
     dEtot = dEband = pSPARC->TOL_SCF + 1.0;
+    
+    if (pSPARC->SQ3Flag == 1){
+        pSPARC->ChebComp = (CHEBCOMP*) calloc(pSPARC->Nspin_spincomm, sizeof(CHEBCOMP));
+        for (i = 0; i < pSPARC->Nspin_spincomm; i++){
+            init_CHEBCOMP(pSPARC->ChebComp+i, pSPARC->sq3_npl, pSPARC->Nstates, pSPARC->cmc_cols);
+        }
+    }
     
     // 1st SCF will perform Chebyshev filtering several times, "count" keeps track 
     // of number of Chebyshev filtering calls, while SCFcount keeps track of # of

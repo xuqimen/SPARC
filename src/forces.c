@@ -206,11 +206,13 @@ void Calculate_nonlocal_forces_linear(SPARC_OBJ *pSPARC)
     }    
     
     /* find inner product <Chi_Jlm, dPsi_n> */
+    double *XorY = (pSPARC->SQ3Flag == 0) ? pSPARC->Xorb : pSPARC->Yorb;
+    double *YorZ = (pSPARC->SQ3Flag == 0) ? pSPARC->Yorb : pSPARC->Zorb;
     for (dim = 0; dim < 3; dim++) {
         count = 0;
         for(spn_i = 0; spn_i < nspin; spn_i++) {
             // find dPsi in direction dim
-            Gradient_vectors_dir(pSPARC, DMnd, pSPARC->DMVertices_dmcomm, ncol, 0.0, pSPARC->Xorb+spn_i*size_s, pSPARC->Yorb+spn_i*size_s, dim, pSPARC->dmcomm);
+            Gradient_vectors_dir(pSPARC, DMnd, pSPARC->DMVertices_dmcomm, ncol, 0.0, XorY+spn_i*size_s, YorZ+spn_i*size_s, dim, pSPARC->dmcomm);
             beta = alpha + pSPARC->IP_displ[pSPARC->n_atom] * ncol * (nspin * (dim + 1) + count);
             for (ityp = 0; ityp < pSPARC->Ntypes; ityp++) {
                 //lmax = pSPARC->psd[ityp].lmax;
@@ -220,7 +222,7 @@ void Calculate_nonlocal_forces_linear(SPARC_OBJ *pSPARC)
                     dx_rc = (double *)malloc( ndc * ncol * sizeof(double));
                     atom_index = pSPARC->Atom_Influence_nloc[ityp].atom_index[iat];
                     for (n = 0; n < ncol; n++) {
-                        dx_ptr = pSPARC->Yorb + spn_i * size_s + n * DMnd;
+                        dx_ptr = YorZ + spn_i * size_s + n * DMnd;
                         dx_rc_ptr = dx_rc + n * ndc;
                         for (i = 0; i < ndc; i++) {
                             // dx_rc[n*ndc+i] = pSPARC->Yorb[n*DMnd+pSPARC->Atom_Influence_nloc[ityp].grid_pos[iat][i]];
@@ -267,7 +269,7 @@ void Calculate_nonlocal_forces_linear(SPARC_OBJ *pSPARC)
                 //beta_Jy = beta_y + pSPARC->IP_displ[atom_index]*ncol;
                 //beta_Jz = beta_z + pSPARC->IP_displ[atom_index]*ncol;
                 for (n = pSPARC->band_start_indx; n <= pSPARC->band_end_indx; n++) {
-                    g_nk = pSPARC->occ[spn_i*pSPARC->Nstates+n];
+                    g_nk = (pSPARC->SQ3Flag == 0) ? pSPARC->occ[spn_i*pSPARC->Nstates+n] : 1;
                     val2_x = val2_y = val2_z = 0.0;
                     ldispl = 0;
                     for (l = 0; l <= lmax; l++) {

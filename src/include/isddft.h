@@ -148,6 +148,14 @@ typedef struct _NLOC_PROJ_OBJ {
 } NLOC_PROJ_OBJ;
 
 
+typedef struct ChebComps2
+{
+    double eigmin;
+    double eigmax;
+    int sq3_npl;
+    double **Ti;
+    double *tr_Ti;
+} CHEBCOMP;
 
 typedef struct _SPARC_OBJ{
     char SPARCROOT[L_STRING]; // SPARC root directory
@@ -660,6 +668,39 @@ typedef struct _SPARC_OBJ{
     // generalized eigen problem, and subspace rotation
     void *DP_CheFSI;     // Pointer to a DP_CheFSI_s data structure for those three procedures w/o Kpt
     void *DP_CheFSI_kpt; // Pointer to a DP_CheFSI_kpt_s data structure for those three procedures w/ Kpt
+
+    /* EigenValue problem*/
+    int StandardEigenFlag;
+
+    /* SQ3 methods */
+    int SQ3Flag;
+    int sq3_npl;
+    double *Zorb;       // Kohn-Sham orbitals (LOCAL)
+
+    int ictxt_kptcomm;
+    int bhandle_kptcomm;
+
+    MPI_Comm SQcomm;
+    int ictxt_SQ;
+    int bhandle_SQ;
+    int desc_Hp_SQ[9];
+    int nr_Hp_SQ;
+    int nc_Hp_SQ;
+    double *Hp_SQ;
+    CHEBCOMP *ChebComp;
+
+    int ictxt_cmc;
+    int bhandle_cmc;
+    int desc_Hp_cmc[9];
+    double *Hp_cmc;
+    double *Ds_cmc;
+    int cmc_cols;
+    
+    MPI_Comm Dscomm;
+    int size_Dscomm;
+    int ictxt_Ds;
+    int bhandle_Ds;
+    int desc_Ds[9];
 }SPARC_OBJ;
 
 
@@ -852,6 +893,13 @@ typedef struct _SPARC_INPUT_OBJ{
     char filename_out[L_STRING];
     
     char SPARCROOT[L_STRING]; // SPARC root directory
+
+    /* Eigenvalue Problem */
+    int StandardEigenFlag;
+    
+    /* SQ3 methods */
+    int SQ3Flag;
+    int sq3_npl;
 
 }SPARC_INPUT_OBJ;
 
