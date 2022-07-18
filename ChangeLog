@@ -5,6 +5,13 @@
 
 
 --------------
+Jul 18, 2022
+Name: Qimen Xu
+Changes: (gradVecRoutines.c, lapVecOrth.c)
+1. When the FD order = `8, 12, 16`, use a hard-coded version of the (orthogonal, gamma-point) stencil to improve its efficiency.
+
+
+--------------
 Jul 14, 2022
 Name: Xin Jing
 Changes: (exx/, sq/, initialization.c, tests/)
