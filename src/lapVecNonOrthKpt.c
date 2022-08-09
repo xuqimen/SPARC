@@ -416,7 +416,11 @@ void Lap_plus_diag_vec_mult_nonorth_kpt(
         // copy receive buffer into extended domain
         count = 0;
         for (nbrcount = 0; nbrcount < 26; nbrcount++) {
-            const double complex phase_factor = phase_factors[nbrcount];
+            int block_region = grid_outside_region(
+                istart_in[nbrcount], jstart_in[nbrcount], kstart_in[nbrcount],
+                -FDn, -FDn, -FDn, DMVertices, gridsizes
+            );
+            double complex phase_factor = block_region >= 0 ? phase_factors[block_region] : 1.0;
             for (n = 0; n < ncol; n++) {
                 nshift = n * DMnd_ex;
                 for (k = kstart_in[nbrcount]; k < kend_in[nbrcount]; k++) {
@@ -425,10 +429,8 @@ void Lap_plus_diag_vec_mult_nonorth_kpt(
                         jshift = kshift + j * DMnx_ex;
                         for (i = istart_in[nbrcount]; i < iend_in[nbrcount]; i++) {
                             ind = jshift + i;
-                            if (is_grid_outside(i, j, k, -FDn, -FDn, -FDn, DMVertices, gridsizes))
-                                x_ex[ind] = x_in[count++] * phase_factor;
-                            else
-                                x_ex[ind] = x_in[count++];
+                            // if (is_grid_outside(i, j, k, -FDn, -FDn, -FDn, DMVertices, gridsizes))
+                            x_ex[ind] = x_in[count++] * phase_factor;
                         }
                     }
                 }
