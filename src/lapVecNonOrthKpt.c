@@ -274,9 +274,6 @@ void Lap_plus_diag_vec_mult_nonorth_kpt(
     int overlap_flag = (int) (nproc > 1 && DMnx > order
                           && DMny > order && DMnz > order);
 
-// overlap_flag = 1; // TODO: remove after check!
-// printf(YEL "Warning: FORCING overlap_flag = 1!\n" RESET);
-
     int DMnxexny = DMnx_ex * DMny;
     int DMnd_xex = DMnxexny * DMnz;
     int DMnxnyex = DMnx * DMny_ex;
@@ -429,7 +426,6 @@ void Lap_plus_diag_vec_mult_nonorth_kpt(
                         jshift = kshift + j * DMnx_ex;
                         for (i = istart_in[nbrcount]; i < iend_in[nbrcount]; i++) {
                             ind = jshift + i;
-                            // if (is_grid_outside(i, j, k, -FDn, -FDn, -FDn, DMVertices, gridsizes))
                             x_ex[ind] = x_in[count++] * phase_factor;
                         }
                     }
