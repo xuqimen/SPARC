@@ -279,9 +279,8 @@ void Lap_plus_diag_vec_mult_nonorth_kpt(
     int DMnxnyex = DMnx * DMny_ex;
     int DMnd_yex = DMnxnyex * DMnz;
     int DMnd_zex = DMnxny * DMnz_ex;
-    double complex *Dx1, *Dx2, phase_fac_m1, phase_fac_m2, phase_fac_m3;
+    double complex *Dx1, *Dx2;
     Dx1 = NULL; Dx2 = NULL;
-    phase_fac_m1 = phase_fac_m2 = phase_fac_m3 = 0.0;
     if(pSPARC->cell_typ == 11){
         Dx1 = (double complex *) malloc(ncol * DMnd_xex * sizeof(double complex) ); // df/dy
         assert(Dx1 != NULL);
@@ -877,7 +876,7 @@ void Calc_DX1_DX2_kpt(
     const double *stencil_coefs1,
     const double *stencil_coefs2)
 {
-    int i, j, k, ii, jj, kk, r;
+    int i, j, k, jj, kk, r;
 
     for (k = z_DX_spos, kk = z_X_spos; k < z_DX_epos; k++, kk++)
     {
@@ -931,7 +930,7 @@ void stencil_4comp_kpt(
     const double coef_0,       const double b,
     const double *v0,          double complex *X1)
 {
-    int i, j, k, ii, jj, kk, iii, jjj, kkk, r;
+    int i, j, k, jj, kk, jjj, kkk, r;
 
     for (k = z_X1_spos, kk = z_X_spos, kkk = z_DX_spos; k < z_X1_epos; k++, kk++, kkk++)
     {
@@ -995,7 +994,7 @@ void stencil_5comp_kpt(
     const double coef_0,       const double b,
     const double *v0,          double complex *X1)
 {
-    int i, j, k, ii, jj, kk, iii, jjj, kkk, iiii, jjjj, kkkk, r;
+    int i, j, k, jj, kk, jjj, kkk, jjjj, kkkk, r;
     for (k = z_X1_spos, kk = z_X_spos, kkk = z_DX1_spos, kkkk = z_DX2_spos; k < z_X1_epos; k++, kk++, kkk++, kkkk++)
     {
         int kshift_X1 = k * stride_z_X1;
