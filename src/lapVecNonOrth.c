@@ -518,7 +518,7 @@ void Lap_plus_diag_vec_mult_nonorth(
 
     int overlap_flag = (int) (nproc > 1 && DMnx > pSPARC->order 
                           && DMny > pSPARC->order && DMnz > pSPARC->order);
-    //overlap_flag = 1;                       
+    overlap_flag = 0;                       
     int DMnxexny = DMnx_ex * DMny;
     int DMnd_xex = DMnxexny * DMnz;
     int DMnxnyex = DMnx * DMny_ex;

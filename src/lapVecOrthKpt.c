@@ -338,7 +338,7 @@ void Lap_plus_diag_vec_mult_orth_kpt(
                           && DMny > pSPARC->order && DMnz > pSPARC->order);
     
     // TODO: REMOVE AFTER CHECK
-    //overlap_flag = 0;
+    overlap_flag = 0;
                           
     int i, j, k;
     // while the non-blocking communication is undergoing, compute 
