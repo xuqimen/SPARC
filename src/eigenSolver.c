@@ -1218,10 +1218,8 @@ void Project_Hamiltonian(SPARC_OBJ *pSPARC, int *DMVertices, double *Y,
         if (!rank && spn_i == 0) printf("rank = %d, STARTING PDGEMM ...\n",rank);
         #endif   
         // perform matrix multiplication using ScaLAPACK routines
-        pdgemm_("T", "N", &pSPARC->Nstates, &pSPARC->Nstates, &Nd_blacscomm, &alpha, 
-                pSPARC->Yorb_BLCYC, &ONE, &ONE, pSPARC->desc_orb_BLCYC,
-                pSPARC->Yorb_BLCYC, &ONE, &ONE, pSPARC->desc_orb_BLCYC, &beta, Mp, 
-                &ONE, &ONE, pSPARC->desc_Mp_BLCYC);
+        pdsyrk_("U", "T", &pSPARC->Nstates, &Nd_blacscomm, &alpha, pSPARC->Yorb_BLCYC, &ONE, &ONE,
+            pSPARC->desc_orb_BLCYC, &beta, Mp, &ONE, &ONE, pSPARC->desc_Mp_BLCYC);
     } else {
         #ifdef DEBUG    
         if (!rank && spn_i == 0) printf("rank = %d, STARTING DGEMM ...\n",rank);
