@@ -1436,7 +1436,7 @@ void Solve_Generalized_EigenProblem(SPARC_OBJ *pSPARC, int k, int spn_i)
             }
             #endif
         } else {
-            int ZERO = 0, ONE = 1, il = 1, iu = 1, *ifail, info, N, M, NZ;
+            int ONE = 1, il = 1, iu = 1, *ifail, info, N, M, NZ;
             double vl = 0.0, vu = 0.0, abstol, orfac;
 
             ifail = (int *)malloc(pSPARC->Nstates * sizeof(int));

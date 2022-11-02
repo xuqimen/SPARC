@@ -374,7 +374,7 @@ void Lap_plus_diag_vec_mult_nonorth(
     periods[2] = 1 - pSPARC->BCz;
     
     int order = pSPARC->order;
-    int FDn = pSPARC->order / 2;
+    int FDn = order / 2;
     
     // The user has to make sure DMnd = DMnx * DMny * DMnz
     int DMnx = DMVertices[1] - DMVertices[0] + 1;
@@ -382,15 +382,12 @@ void Lap_plus_diag_vec_mult_nonorth(
     int DMnz = DMVertices[5] - DMVertices[4] + 1;
     int DMnxny = DMnx * DMny;
     
-    int DMnx_ex = DMnx + pSPARC->order;
-    int DMny_ex = DMny + pSPARC->order;
-    int DMnz_ex = DMnz + pSPARC->order;
+    int DMnx_ex = DMnx + order;
+    int DMny_ex = DMny + order;
+    int DMnz_ex = DMnz + order;
     int DMnxny_ex = DMnx_ex * DMny_ex;
     int DMnd_ex = DMnxny_ex * DMnz_ex;
     
-    int DMnx_in  = DMnx - FDn;
-    int DMny_in  = DMny - FDn;
-    int DMnz_in  = DMnz - FDn;
     int DMnx_out = DMnx + FDn;
     int DMny_out = DMny + FDn;
     int DMnz_out = DMnz + FDn;

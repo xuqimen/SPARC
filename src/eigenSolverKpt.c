@@ -1187,8 +1187,9 @@ void Solve_Generalized_EigenProblem_kpt(SPARC_OBJ *pSPARC, int kpt, int spn_i)
         }
         #endif
     } else {
-        int ZERO = 0, ONE = 1, il = 1, iu = 1, *ifail, info, N, M, NZ;
-        double complex *work;
+        t1 = MPI_Wtime();
+        int ONE = 1, il = 1, iu = 1, *ifail, info, N, M, NZ;
+        // double complex *work;
         double vl = 0.0, vu = 0.0, abstol, orfac;
         
         ifail = (int *)malloc(pSPARC->Nstates * sizeof(int));

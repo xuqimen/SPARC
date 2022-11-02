@@ -60,7 +60,7 @@
  */
 void Exact_Exchange_loop(SPARC_OBJ *pSPARC) {
     int i, rank, DMnd, blacs_size, kpt_size, spn_i;
-    double t1, t2, ACE_time;
+    double t1, t2, ACE_time = 0.0;
     FILE *output_fp;
 
     DMnd = pSPARC->Nd_d_dmcomm;
