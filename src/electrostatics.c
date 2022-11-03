@@ -18,7 +18,6 @@
 #include "linearSolver.h"
 #include "lapVecRoutines.h"
 #include "lapVecOrth.h"
-#include "lapVecNonOrth.h"
 #include "nlocVecRoutines.h"
 #include "gradVecRoutines.h"
 #include "initialization.h"

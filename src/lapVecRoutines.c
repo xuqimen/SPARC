@@ -20,8 +20,6 @@
 #include "lapVecRoutines.h"
 #include "lapVecOrth.h"
 #include "lapVecOrthKpt.h"
-#include "lapVecNonOrth.h"
-#include "lapVecNonOrthKpt.h"
 #include "isddft.h"
 
 /**

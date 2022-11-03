@@ -26,7 +26,6 @@
 #include "gradVecRoutines.h"
 #include "gradVecRoutinesKpt.h"
 #include "lapVecOrth.h"
-#include "lapVecNonOrth.h"
 #include "tools.h" 
 #include "isddft.h"
 #include "initialization.h"
