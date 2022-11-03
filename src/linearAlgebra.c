@@ -49,7 +49,9 @@ void automem_pdsyevx_ (
 #if defined(USE_MKL) || defined(USE_SCALAPACK)
     int grank;
     MPI_Comm_rank(MPI_COMM_WORLD, &grank);
+#ifdef DEBUG
     double t1, t2;
+#endif
 
 	int ictxt = desca[1], nprow, npcol, myrow, mycol;
 	Cblacs_gridinfo(ictxt, &nprow, &npcol, &myrow, &mycol);
@@ -63,13 +65,15 @@ void automem_pdsyevx_ (
 	icluster = (int *)malloc(2 * nprow * npcol * sizeof(int));    
 
 	//** first do a workspace query **//
+#ifdef DEBUG    
     t1 = MPI_Wtime();
+#endif
 	pdsyevx_(jobz, range, uplo, n, a, ia, ja, desca, 
 			vl, vu, il, iu, abstol, m, nz, w, 
 			orfac, z, iz, jz, descz, work, &lwork, iwork, 
 			&liwork, ifail, icluster, gap, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
     if(!grank) printf("rank = %d, work(1) = %f, time for "
                         "workspace query: %.3f ms\n", 
                         grank, work[0], (t2 - t1)*1e3);
@@ -95,13 +99,15 @@ void automem_pdsyevx_ (
 	iwork = realloc(iwork, liwork * sizeof(int));
 
 	// call the routine again to perform the calculation
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsyevx_(jobz, range, uplo, n, a, ia, ja, desca, 
 			vl, vu, il, iu, abstol, m, nz, w, 
 			orfac, z, iz, jz, descz, work, &lwork, iwork, 
 			&liwork, ifail, icluster, gap, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
 if(!grank) {
     printf("rank = %d, info = %d, time for solving standard "
             "eigenproblem in %d x %d process grid: %.3f ms\n", 
@@ -133,8 +139,9 @@ void automem_pdsyev_ (
 #if defined(USE_MKL) || defined(USE_SCALAPACK)
     int grank;
     MPI_Comm_rank(MPI_COMM_WORLD, &grank);
+#ifdef DEBUG
     double t1, t2;
-
+#endif
 	int ictxt = desca[1], nprow, npcol, myrow, mycol;
 	Cblacs_gridinfo(ictxt, &nprow, &npcol, &myrow, &mycol);
 
@@ -144,11 +151,13 @@ void automem_pdsyev_ (
 	work  = (double *)malloc(100 * sizeof(double));
 
 	//** first do a workspace query **//
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsyev_(jobz, uplo, n, a, ia, ja, desca, 
 			w, z, iz, jz, descz, work, &lwork, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
     if(!grank) printf("rank = %d, work(1) = %f, time for "
                         "workspace query: %.3f ms\n", 
                         grank, work[0], (t2 - t1)*1e3);
@@ -179,11 +188,13 @@ void automem_pdsyev_ (
      *  eigenvalue problem and then re-distribute.
      */
 	// call the routine again to perform the calculation
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsyev_(jobz, uplo, n, a, ia, ja, desca, 
 			w, z, iz, jz, descz, work, &lwork, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
 if(!grank) {
     printf("rank = %d, info = %d, time for solving standard "
             "eigenproblem in %d x %d process grid: %.3f ms\n", 
@@ -214,7 +225,9 @@ void automem_pdsygvx_ (
 #if defined(USE_MKL) || defined(USE_SCALAPACK)
     int grank;
     MPI_Comm_rank(MPI_COMM_WORLD, &grank);
+#ifdef DEBUG
     double t1, t2;
+#endif
 
 	int ictxt = desca[1], nprow, npcol, myrow, mycol;
 	Cblacs_gridinfo(ictxt, &nprow, &npcol, &myrow, &mycol);
@@ -228,15 +241,17 @@ void automem_pdsygvx_ (
 	icluster = (int *)malloc(2 * nprow * npcol * sizeof(int));    
 
 	//** first do a workspace query **//
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsygvx_(ibtype, jobz, range, uplo, n, a, ia, ja, 
 		 desca, b, ib, jb, descb, vl, 
 		 vu, il, iu, abstol, m, nz, w, 
 		 orfac, z, iz, jz, descz, 
 		 work, &lwork, iwork, &liwork, 
 		 ifail, icluster, gap, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
     if(!grank) printf("rank = %d, work(1) = %f, time for "
                         "workspace query: %.3f ms\n", 
                         grank, work[0], (t2 - t1)*1e3);
@@ -265,15 +280,17 @@ void automem_pdsygvx_ (
 	iwork = realloc(iwork, liwork * sizeof(int));
 
 	// call the routine again to perform the calculation
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsygvx_(ibtype, jobz, range, uplo, n, a, ia, ja, 
 		 desca, b, ib, jb, descb, vl, 
 		 vu, il, iu, abstol, m, nz, w, 
 		 orfac, z, iz, jz, descz, 
 		 work, &lwork, iwork, &liwork, 
 		 ifail, icluster, gap, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
 if(!grank) {
     printf("rank = %d, info = %d, time for solving generalized "
             "eigenproblem in %d x %d process grid: %.3f ms\n", 
@@ -307,8 +324,9 @@ void automem_pzhegvx_ (
 #if defined(USE_MKL) || defined(USE_SCALAPACK)
     int grank;
     MPI_Comm_rank(MPI_COMM_WORLD, &grank);
+#ifdef DEBUG
     double t1, t2;
-
+#endif
 	int ictxt = desca[1], nprow, npcol, myrow, mycol;
 	Cblacs_gridinfo(ictxt, &nprow, &npcol, &myrow, &mycol);
 
@@ -324,15 +342,17 @@ void automem_pzhegvx_ (
 	icluster = (int *)malloc(2 * nprow * npcol * sizeof(int));
 
 	//** first do a workspace query **//
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pzhegvx_(ibtype, jobz, range, uplo, n, a, ia, ja, 
 		 desca, b, ib, jb, descb, vl, 
 		 vu, il, iu, abstol, m, nz, w, 
 		 orfac, z, iz, jz, descz, 
 		 work, &lwork, rwork, &lrwork, iwork, 
 		 &liwork, ifail, icluster, gap, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
     if(!grank) printf("rank = %d, work(1) = %f+i%f, time for "
                         "workspace query: %.3f ms\n", 
                         grank, creal(work[0]), cimag(work[0]), (t2 - t1)*1e3);
@@ -379,15 +399,17 @@ void automem_pzhegvx_ (
 	 */
 
 	// call the routine again to perform the calculation
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pzhegvx_(ibtype, jobz, range, uplo, n, a, ia, ja, 
 		 desca, b, ib, jb, descb, vl, 
 		 vu, il, iu, abstol, m, nz, w, 
 		 orfac, z, iz, jz, descz, 
 		 work, &lwork, rwork, &lrwork, iwork, 
 		 &liwork, ifail, icluster, gap, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
 if(!grank) {
     printf("rank = %d, info = %d, time for solving standard "
             "eigenproblem in %d x %d process grid: %.3f ms\n", 
@@ -420,7 +442,9 @@ void automem_pdsyevd_ (
 #if defined(USE_MKL) || defined(USE_SCALAPACK)
     int grank;
     MPI_Comm_rank(MPI_COMM_WORLD, &grank);
+#ifdef DEBUG
     double t1, t2;
+#endif
 
 	int ictxt = desca[1], nprow, npcol, myrow, mycol;
 	Cblacs_gridinfo(ictxt, &nprow, &npcol, &myrow, &mycol);
@@ -432,11 +456,13 @@ void automem_pdsyevd_ (
 	iwork = (int *)malloc(100 * sizeof(int)); 
 
 	//** first do a workspace query **//
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsyevd_(jobz, uplo, n, a, ia, ja, desca, w, z, iz, jz, descz, 
 		work, &lwork, iwork, &liwork, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
     if(!grank) printf("rank = %d, work(1) = %f, time for "
                         "workspace query: %.3f ms\n", 
                         grank, work[0], (t2 - t1)*1e3);
@@ -462,11 +488,13 @@ void automem_pdsyevd_ (
 	iwork = realloc(iwork, liwork * sizeof(int));
 
 	// call the routine again to perform the calculation
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
 	pdsyevd_(jobz, uplo, n, a, ia, ja, desca, w, z, iz, jz, descz, 
 		work, &lwork, iwork, &liwork, info);
-    t2 = MPI_Wtime();
 #ifdef DEBUG
+    t2 = MPI_Wtime();
 if(!grank) {
     printf("rank = %d, info = %d, time for solving standard "
             "eigenproblem in %d x %d process grid: %.3f ms\n", 

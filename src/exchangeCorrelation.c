@@ -1121,9 +1121,10 @@ void Calculate_Exc_LDA_PW(SPARC_OBJ *pSPARC, double *electronDens)
 {
     if (pSPARC->dmcomm_phi == MPI_COMM_NULL) return; 
 
+    #ifdef DEBUG
     double t1, t2, t3;
-
     t1 = MPI_Wtime();
+    #endif
 
     int rank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -1165,13 +1166,15 @@ void Calculate_Exc_LDA_PW(SPARC_OBJ *pSPARC, double *electronDens)
     }
     Exc *= pSPARC->dV;
     
-    t2 = MPI_Wtime();    
+    #ifdef DEBUG
+    t2 = MPI_Wtime();
+    #endif
 
     MPI_Allreduce(MPI_IN_PLACE, &Exc, 1, MPI_DOUBLE, MPI_SUM, pSPARC->dmcomm_phi);
     pSPARC->Exc = Exc;
 
-    t3 = MPI_Wtime();
 #ifdef DEBUG
+    t3 = MPI_Wtime();
     if (!rank) printf("rank = %d, Exc = %18.14f , local calculation time: %.3f ms, Allreduce time: %.3f ms, Total time: %.3f ms\n", rank, Exc,(t2-t1)*1e3, (t3-t2)*1e3, (t3-t1)*1e3);
 #endif
 }

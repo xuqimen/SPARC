@@ -73,9 +73,12 @@ void compute_Kinetic_Density_Tau(SPARC_OBJ *pSPARC, double *Krho)
     int i, n, DMnd, Ns, Nk, nstart, nend, spn_i, sg, kpt;
     int size_s, size_k, count, spinDMnd, Nband;
     // double *LapX, *X, g_nk, t1, t2, *Dx, *Dy, *Dz, *Krho;
-    double *X, g_nk, t1, t2, *Dx, *Dy, *Dz;
+    double *X, g_nk, *Dx, *Dy, *Dz;
     double _Complex *X_kpt, *Dx_kpt, *Dy_kpt, *Dz_kpt;
-
+#ifdef DEBUG
+    double t1, t2;
+#endif
+    
     DMnd = pSPARC->Nd_d_dmcomm;
     Nband = pSPARC->Nband_bandcomm;
     Ns = pSPARC->Nstates;
@@ -171,41 +174,46 @@ void compute_Kinetic_Density_Tau(SPARC_OBJ *pSPARC, double *Krho)
 
     // sum over spin comm group
     if(pSPARC->npspin > 1) {
+    #ifdef DEBUG
         t1 = MPI_Wtime();
+    #endif
         if (pSPARC->spincomm_index == 0)
             MPI_Reduce(MPI_IN_PLACE, Krho, spinDMnd, MPI_DOUBLE, MPI_SUM, 0, pSPARC->spin_bridge_comm);
         else
             MPI_Reduce(Krho, Krho, spinDMnd, MPI_DOUBLE, MPI_SUM, 0, pSPARC->spin_bridge_comm);
         
-        t2 = MPI_Wtime();
     #ifdef DEBUG
+        t2 = MPI_Wtime();
         if (rank == 0) printf("rank = %d, --- compute_Kinetic_Density_Tau: reduce over all spin_comm took %.3f ms\n", rank, (t2-t1)*1e3);
     #endif
     }
 
     // sum over all k-point groups
     if (pSPARC->npkpt > 1 && pSPARC->spincomm_index == 0) {    
+    #ifdef DEBUG
         t1 = MPI_Wtime();
+    #endif
         if (pSPARC->kptcomm_index == 0)
             MPI_Reduce(MPI_IN_PLACE, Krho, spinDMnd, MPI_DOUBLE, MPI_SUM, 0, pSPARC->kpt_bridge_comm);
         else
             MPI_Reduce(Krho, Krho, spinDMnd, MPI_DOUBLE, MPI_SUM, 0, pSPARC->kpt_bridge_comm);
-        
-        t2 = MPI_Wtime();
     #ifdef DEBUG
+        t2 = MPI_Wtime();
         if (rank == 0) printf("rank = %d, --- compute_Kinetic_Density_Tau: reduce over all kpoint groups took %.3f ms\n", rank, (t2-t1)*1e3);
     #endif
     }
 
     // sum over all band groups (only in the first k point group)
     if (pSPARC->npband > 1 && pSPARC->spincomm_index == 0 && pSPARC->kptcomm_index == 0) {
+    #ifdef DEBUG
         t1 = MPI_Wtime();
+    #endif
         if (pSPARC->bandcomm_index == 0)
             MPI_Reduce(MPI_IN_PLACE, Krho, spinDMnd, MPI_DOUBLE, MPI_SUM, 0, pSPARC->blacscomm);
         else
             MPI_Reduce(Krho, Krho, spinDMnd, MPI_DOUBLE, MPI_SUM, 0, pSPARC->blacscomm);
-        t2 = MPI_Wtime();
     #ifdef DEBUG
+        t2 = MPI_Wtime();
         if (rank == 0) printf("rank = %d, --- compute_Kinetic_Density_Tau: reduce over all band groups took %.3f ms\n", rank, (t2-t1)*1e3);
     #endif
     }

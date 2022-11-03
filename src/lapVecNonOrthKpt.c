@@ -128,9 +128,6 @@ void Lap_plus_diag_vec_mult_nonorth_kpt(
     int DMnxny_ex = DMnx_ex * DMny_ex;
     int DMnd_ex = DMnxny_ex * DMnz_ex;
 
-    // int DMnx_in  = DMnx - FDn;
-    // int DMny_in  = DMny - FDn;
-    // int DMnz_in  = DMnz - FDn;
     int DMnx_out = DMnx + FDn;
     int DMny_out = DMny + FDn;
     int DMnz_out = DMnz + FDn;

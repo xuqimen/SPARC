@@ -109,8 +109,10 @@ void Calculate_Vxc_MGGA(SPARC_OBJ *pSPARC,  double *rho) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
+#ifdef DEBUG
     double t1, t2;
     t1 = MPI_Wtime();
+#endif
 
     int DMnd;
     DMnd = pSPARC->Nd_d;
@@ -200,8 +202,8 @@ void Calculate_Vxc_MGGA(SPARC_OBJ *pSPARC,  double *rho) {
     free(Drho_x); free(Drho_y); free(Drho_z); free(normDrho);
     free(DDrho_x); free(DDrho_y); free(DDrho_z);
 
-    t2 = MPI_Wtime();
     #ifdef DEBUG
+    t2 = MPI_Wtime();
         if (rank == 0) printf("end of Calculating Vxc_MGGA, took %.3f ms\n", (t2 - t1)*1000);
     #endif
 }
@@ -212,7 +214,9 @@ void Calculate_Vxc_MGGA(SPARC_OBJ *pSPARC,  double *rho) {
  */
 void Transfer_vxcMGGA3_phi_psi(SPARC_OBJ *pSPARC, double *vxcMGGA3_phi_domain, double *vxcMGGA3_psi_domain) 
 {
+#ifdef DEBUG
     double t1, t2;
+#endif
     
     int rank, spin;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -225,44 +229,46 @@ void Transfer_vxcMGGA3_phi_psi(SPARC_OBJ *pSPARC, double *vxcMGGA3_phi_domain, d
     sdims[0] = pSPARC->npNdx_phi; sdims[1] = pSPARC->npNdy_phi; sdims[2] = pSPARC->npNdz_phi;
     rdims[0] = pSPARC->npNdx; rdims[1] = pSPARC->npNdy; rdims[2] = pSPARC->npNdz;
 
+#ifdef DEBUG
     t1 = MPI_Wtime();
+#endif
     for (spin = 0; spin < pSPARC->Nspin; spin++) {
         D2D(&pSPARC->d2d_dmcomm_phi, &pSPARC->d2d_dmcomm, gridsizes, pSPARC->DMVertices, vxcMGGA3_phi_domain + spin*pSPARC->Nd_d, 
             pSPARC->DMVertices_dmcomm, vxcMGGA3_psi_domain + spin*pSPARC->Nd_d_dmcomm, pSPARC->dmcomm_phi, sdims, 
             (pSPARC->spincomm_index == 0 && pSPARC->kptcomm_index == 0 && pSPARC->bandcomm_index == 0) ? pSPARC->dmcomm : MPI_COMM_NULL, 
             rdims, MPI_COMM_WORLD);
     }
-    t2 = MPI_Wtime();
     #ifdef DEBUG
+    t2 = MPI_Wtime();
         if (rank == 0) printf("---Transfer_vxcMGGA3_phi_psi: D2D took %.3f ms\n",(t2-t1)*1e3);
-    #endif
-    
     t1 = MPI_Wtime();
+    #endif
     
     // Broadcast phi from the dmcomm that contain root process to all dmcomms of the first kptcomms in each spincomm
     if (pSPARC->npspin > 1 && pSPARC->spincomm_index >= 0 && pSPARC->kptcomm_index == 0) {
         MPI_Bcast(vxcMGGA3_psi_domain, pSPARC->Nd_d_dmcomm * pSPARC->Nspin, MPI_DOUBLE, 0, pSPARC->spin_bridge_comm);
     }
     
-    t2 = MPI_Wtime();
     #ifdef DEBUG
+    t2 = MPI_Wtime();
         if (rank == 0) printf("---Transfer_vxcMGGA3_phi_psi: bcast btw/ spincomms of 1st kptcomm took %.3f ms\n",(t2-t1)*1e3);
-    #endif
-
     t1 = MPI_Wtime();
+    #endif
     
     // Broadcast phi from the dmcomm that contain root process to all dmcomms of the first bandcomms in each kptcomm
     if (pSPARC->spincomm_index >= 0 && pSPARC->npkpt > 1 && pSPARC->kptcomm_index >= 0 && pSPARC->bandcomm_index == 0 && pSPARC->dmcomm != MPI_COMM_NULL) {
         MPI_Bcast(vxcMGGA3_psi_domain, pSPARC->Nd_d_dmcomm * pSPARC->Nspin, MPI_DOUBLE, 0, pSPARC->kpt_bridge_comm);
     }
     
-    t2 = MPI_Wtime();
     #ifdef DEBUG
+    t2 = MPI_Wtime();
         if (rank == 0) printf("---Transfer_vxcMGGA3_phi_psi: bcast btw/ kptcomms of 1st bandcomm took %.3f ms\n",(t2-t1)*1e3);
     #endif
 
     MPI_Barrier(pSPARC->blacscomm); // experienced severe slowdown of MPI_Bcast below on Quartz cluster, this Barrier fixed the issue (why?)
+    #ifdef DEBUG
     t1 = MPI_Wtime();
+    #endif
     
     // Bcast phi from first bandcomm to all other bandcomms
     if (pSPARC->npband > 1 && pSPARC->kptcomm_index >= 0 && pSPARC->dmcomm != MPI_COMM_NULL) {
@@ -271,11 +277,10 @@ void Transfer_vxcMGGA3_phi_psi(SPARC_OBJ *pSPARC, double *vxcMGGA3_phi_domain, d
     // pSPARC->req_veff_loc = MPI_REQUEST_NULL; // it seems that it is unnecessary to use the variable in vxcMGGA3?
     
     MPI_Barrier(pSPARC->blacscomm); // experienced severe slowdown of MPI_Bcast above on Quartz cluster, this Barrier fixed the issue (why?)
-    t2 = MPI_Wtime();
     #ifdef DEBUG
+    t2 = MPI_Wtime();
         if (rank == 0) printf("---Transfer_vxcMGGA3_phi_psi: mpi_bcast (count = %d) to all bandcomms took %.3f ms\n",pSPARC->Nd_d_dmcomm,(t2-t1)*1e3);
     #endif
-    
 }
 
 /**
