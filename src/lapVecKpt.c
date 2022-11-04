@@ -35,6 +35,30 @@
 
 
 /**
+ * @brief   Calculate (Lap + c * I) times vectors in a matrix-free way.
+ */
+void Lap_vec_mult_kpt(
+    const SPARC_OBJ *pSPARC, const int DMnd, const int *DMVertices, 
+    const int ncol, const double c, double complex *x, double complex *Lapx, int kpt, MPI_Comm comm
+) 
+{
+    int dims[3], periods[3], my_coords[3];
+    MPI_Cart_get(comm, 3, dims, periods, my_coords);
+    
+    if(pSPARC->cell_typ == 0) {
+        Lap_vec_mult_orth_kpt(pSPARC, DMnd, DMVertices, ncol, 1.0, c, x, Lapx, comm, dims, kpt);
+    } else {
+        MPI_Comm comm2;
+        comm2 = pSPARC->kptcomm_topo_dist_graph;
+        // TODO: make the second communicator general rather than only for phi
+        //Lap_vec_mult_nonorth(pSPARC, DMnd, DMVertices, ncol, c, x, Lapx, comm, comm2);
+        Lap_vec_mult_nonorth_kpt(pSPARC, DMnd, DMVertices, ncol, 1.0, c, x, Lapx, comm, comm2, dims, kpt);       
+    }
+}
+
+
+
+/**
  * @brief   Calculate (a * Lap + c * I) times vectors.
  *
  *          This is only for orthogonal discretization.

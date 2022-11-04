@@ -18,7 +18,6 @@
 #include <mpi.h> 
 
 #include "hamiltonianVecRoutines.h"
-#include "lapVecRoutines.h"
 #include "lapVec.h"
 #include "lapVecKpt.h"
 #include "nlocVecRoutines.h"

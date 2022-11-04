@@ -42,7 +42,7 @@
 #include "eigenSolver.h"
 #include "tools.h" 
 #include "linearSolver.h" // Lanczos
-#include "lapVecRoutines.h"
+#include "lapVecKpt.h"
 #include "hamiltonianVecRoutines.h"
 #include "occupation.h"
 #include "isddft.h"

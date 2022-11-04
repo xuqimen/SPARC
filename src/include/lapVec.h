@@ -20,6 +20,31 @@
 
 
 /**
+ * @brief   Calculate (Lap + c * I) times vectors in a matrix-free way.
+ *
+ *          General routine, for both orthogonal and non-orthogonal.
+ */
+void Lap_vec_mult(
+	const SPARC_OBJ *pSPARC, const int DMnd, const int *DMVertices, 
+	const int ncol, const double c, double *x, double *Lapx, MPI_Comm comm
+);
+
+
+/**
+ * @brief   Calculate the residual of the poisson equation: r = b - A * x, where A = -(Lap + c).
+ *
+ *          The vector x is assumed to be stored domain-wisely among the processors. The
+ *          structure pSPARC contains the description of the distribution info of x, and
+ *          in this case the info of Laplacian operator such as boundary conditions, 
+ *          finite-difference order and coefficients etc.
+ */
+void poisson_residual(
+    SPARC_OBJ *pSPARC, int N, double c, double *x, double *b, 
+    double *r, MPI_Comm comm, double *time_info
+);
+
+
+/**
  * @brief   Calculate (a * Lap + c * I) times vectors.
  *
  *          This is only for orthogonal systems.

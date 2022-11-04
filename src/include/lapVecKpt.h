@@ -20,6 +20,16 @@
 
 
 /**
+ * @brief   Calculate (Lap + c * I) times vectors in a matrix-free way.
+ */
+void Lap_vec_mult_kpt(
+    const SPARC_OBJ *pSPARC, const int DMnd, const int *DMVertices, 
+    const int ncol, const double c, double complex *x, double complex *Lapx, int kpt, MPI_Comm comm
+);
+
+
+
+/**
  * @brief   Calculate (a * Lap + b * diag(v) + c * I) times vectors.
  *
  *          This is only for orthogonal systems.

@@ -19,7 +19,6 @@
 #include "parallelization.h"
 #include "gradVecRoutines.h"
 #include "gradVecRoutinesKpt.h"
-#include "lapVecRoutines.h"
 
 /**
  * @brief   the function to compute the mGGA term in Hamiltonian, called by Hamiltonian_vectors_mult

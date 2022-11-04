@@ -43,7 +43,6 @@
 #include "exactExchangeKpt.h"
 #include "tools.h"
 #include "parallelization.h"
-#include "lapVecRoutines.h"
 
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)<(b)?(a):(b))
