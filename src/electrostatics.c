@@ -16,7 +16,7 @@
 #include "electrostatics.h"
 #include "tools.h"
 #include "linearSolver.h"
-#include "lapVec.h"
+#include "lapVecRoutines.h"
 #include "nlocVecRoutines.h"
 #include "gradVecRoutines.h"
 #include "initialization.h"

@@ -26,7 +26,7 @@
 
 #include "tools.h" 
 #include "mixing.h"
-#include "lapVec.h"
+#include "lapVecRoutines.h"
 #include "isddft.h"
 #include "linearSolver.h"
 

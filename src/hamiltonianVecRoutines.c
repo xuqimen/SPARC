@@ -18,8 +18,8 @@
 #include <mpi.h> 
 
 #include "hamiltonianVecRoutines.h"
-#include "lapVec.h"
-#include "lapVecKpt.h"
+#include "lapVecRoutines.h"
+#include "lapVecRoutinesKpt.h"
 #include "nlocVecRoutines.h"
 #include "isddft.h"
 #include "exactExchange.h"

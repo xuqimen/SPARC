@@ -25,7 +25,7 @@
 #include "pressure.h"
 #include "gradVecRoutines.h"
 #include "gradVecRoutinesKpt.h"
-#include "lapVec.h"
+#include "lapVecRoutines.h"
 #include "tools.h" 
 #include "isddft.h"
 #include "initialization.h"

@@ -80,7 +80,7 @@ CFLAGS = -std=gnu99 -O3 -fopenmp
 OBJSC = main.o initialization.o readfiles.o atomdata.o parallelization.o relax.o tools.o md.o      \
         electrostatics.o electronicGroundState.o electronDensity.o orbitalElecDensInit.o           \
         occupation.o gradVecRoutines.o gradVecRoutinesKpt.o nlocVecRoutines.o     \
-        hamiltonianVecRoutines.o lapVec.o lapVecKpt.o \
+        hamiltonianVecRoutines.o lapVecRoutines.o lapVecRoutinesKpt.o \
         linearSolver.o mixing.o exchangeCorrelation.o eigenSolver.o eigenSolverKpt.o energy.o      \
         forces.o stress.o pressure.o finalization.o spinOrbitCoupling.o printing.o energyDensity.o \
         linearAlgebra.o \

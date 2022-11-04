@@ -1,7 +1,7 @@
 /**
- * @file    lapVecKpt.h
+ * @file    lapVecRoutinesKpt.h
  * @brief   This file contains functions declarations for performing 
- *          the orthogonal laplacian-vector multiply routines with Bloch boundary condition.
+ *          the laplacian-vector multiply routines with Bloch boundary condition.
  *
  * @authors Qimen Xu <qimenxu@gatech.edu>
  *          Abhiraj Sharma <asharma424@gatech.edu>
@@ -13,8 +13,8 @@
  */
  
 
-#ifndef LAPVECKPT_H
-#define LAPVECKPT_H
+#ifndef LAPVECROUTINESKPT_H
+#define LAPVECROUTINESKPT_H
 
 #include "isddft.h"
 
@@ -207,6 +207,6 @@ void stencil_5comp_kpt(
     const double *v0,          double complex *X1
 );
 
-#endif // LAPVECKPT_H
+#endif // LAPVECROUTINESKPT_H
 
 

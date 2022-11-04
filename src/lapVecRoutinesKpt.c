@@ -1,5 +1,5 @@
 /**
- * @file    lapVecKpt.c
+ * @file    lapVecRoutinesKpt.c
  * @brief   This file contains functions for performing the laplacian-vector
  *          multiply routines with Bloch boundary condition.
  *
@@ -19,8 +19,8 @@
 #include <math.h>
 #include <mpi.h>
 
-#include "lapVecKpt.h"
-#include "lapVec.h"
+#include "lapVecRoutinesKpt.h"
+#include "lapVecRoutines.h"
 #include "gradVecRoutinesKpt.h"
 #include "tools.h"
 #include "isddft.h"

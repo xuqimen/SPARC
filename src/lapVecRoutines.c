@@ -1,5 +1,5 @@
 /**
- * @file    lapVec.c
+ * @file    lapVecRoutines.c
  * @brief   This file contains functions for performing the
  *          laplacian-vector multiply routines.
  *
@@ -16,7 +16,7 @@
 #include <math.h>
 #include <mpi.h> 
 
-#include "lapVec.h"
+#include "lapVecRoutines.h"
 #include "gradVecRoutines.h"
 #include "isddft.h"
 

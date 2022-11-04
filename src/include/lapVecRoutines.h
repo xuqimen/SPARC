@@ -1,7 +1,7 @@
 /**
- * @file    lapVec.h
+ * @file    lapVecRoutines.h
  * @brief   This file contains functions declarations for performing 
- *          the orthogonal laplacian-vector multiply routines.
+ *          the laplacian-vector multiply routines.
  *
  * @authors Qimen Xu <qimenxu@gatech.edu>
  *          Abhiraj Sharma <asharma424@gatech.edu>
@@ -13,8 +13,8 @@
  */
  
 
-#ifndef LAPVEC_H
-#define LAPVEC_H
+#ifndef LAPVECROUTINES_H
+#define LAPVECROUTINES_H
 
 #include "isddft.h"
 
@@ -340,6 +340,6 @@ void stencil_5comp_extd(
     double *X1
 );
 
-#endif // LAPVEC_H
+#endif // LAPVECROUTINES_H
 
 

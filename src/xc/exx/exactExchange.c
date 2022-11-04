@@ -40,7 +40,7 @@
 #endif
 
 #include "exactExchange.h"
-#include "lapVec.h"
+#include "lapVecRoutines.h"
 #include "linearSolver.h"
 #include "exactExchangeKpt.h"
 #include "tools.h"
