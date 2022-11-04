@@ -25,7 +25,7 @@
 #include "forces.h"
 #include "gradVecRoutines.h"
 #include "gradVecRoutinesKpt.h"
-#include "lapVecOrth.h"
+#include "lapVec.h"
 #include "tools.h" 
 #include "isddft.h"
 #include "initialization.h"

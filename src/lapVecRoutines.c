@@ -18,8 +18,8 @@
 #include <mpi.h> 
 
 #include "lapVecRoutines.h"
-#include "lapVecOrth.h"
-#include "lapVecOrthKpt.h"
+#include "lapVec.h"
+#include "lapVecKpt.h"
 #include "isddft.h"
 
 /**

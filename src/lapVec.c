@@ -1,6 +1,6 @@
 /**
- * @file    lapVecOrth.c
- * @brief   This file contains functions for performing the orthogonal
+ * @file    lapVec.c
+ * @brief   This file contains functions for performing the
  *          laplacian-vector multiply routines.
  *
  * @author  Qimen Xu <qimenxu@gatech.edu>
@@ -16,7 +16,7 @@
 #include <math.h>
 #include <mpi.h> 
 
-#include "lapVecOrth.h"
+#include "lapVec.h"
 #include "gradVecRoutines.h"
 #include "isddft.h"
 

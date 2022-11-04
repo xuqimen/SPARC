@@ -1,5 +1,5 @@
 /**
- * @file    lapVecOrth.h
+ * @file    lapVec.h
  * @brief   This file contains functions declarations for performing 
  *          the orthogonal laplacian-vector multiply routines.
  *
@@ -13,8 +13,8 @@
  */
  
 
-#ifndef ORTHLAP_H
-#define ORTHLAP_H
+#ifndef LAPVEC_H
+#define LAPVEC_H
 
 #include "isddft.h"
 
@@ -315,6 +315,6 @@ void stencil_5comp_extd(
     double *X1
 );
 
-#endif // ORTHLAP_H
+#endif // LAPVEC_H
 
 
