@@ -24,8 +24,9 @@
 #include "printing.h"
 #include "tools.h"
 #include "parallelization.h"
-#include "energyDensity.h"
+#include "exchangeCorrelation.h"
 #include "exactExchangeEnergyDensity.h"
+#include "MGGAexchangeCorrelation.h"
 
 
 /**
