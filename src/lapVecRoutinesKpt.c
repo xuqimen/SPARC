@@ -9,7 +9,7 @@
  *          Hua Huang <huangh223@gatech.edu>
  *          Edmond Chow <echow@cc.gatech.edu>
  * 
- * Copyright (c) 2020 Material Physics & Mechanics Group at Georgia Tech.
+ * Copyright (c) 2020 Material Physics & Mechanics Group, Georgia Tech.
  */
 
 #include <complex.h>
