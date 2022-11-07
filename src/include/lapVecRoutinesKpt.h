@@ -1,7 +1,7 @@
 /**
  * @file    lapVecRoutinesKpt.h
- * @brief   This file contains functions declarations for performing 
- *          the laplacian-vector multiply routines with Bloch boundary condition.
+ * @brief   This file contains function declarations for performing 
+ *          the laplacian-vector multiply routines with a Bloch factor.
  *
  * @authors Qimen Xu <qimenxu@gatech.edu>
  *          Abhiraj Sharma <asharma424@gatech.edu>

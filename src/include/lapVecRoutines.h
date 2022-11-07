@@ -1,6 +1,6 @@
 /**
  * @file    lapVecRoutines.h
- * @brief   This file contains functions declarations for performing 
+ * @brief   This file contains function declarations for performing 
  *          the laplacian-vector multiply routines.
  *
  * @authors Qimen Xu <qimenxu@gatech.edu>

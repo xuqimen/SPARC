@@ -1,7 +1,7 @@
 /**
  * @file    lapVecRoutinesKpt.c
  * @brief   This file contains functions for performing the laplacian-vector
- *          multiply routines with Bloch boundary condition.
+ *          multiply routines with a Bloch factor.
  *
  * @authors Abhiraj Sharma <asharma424@gatech.edu>
  *          Qimen Xu <qimenxu@gatech.edu>
@@ -9,7 +9,7 @@
  *          Hua Huang <huangh223@gatech.edu>
  *          Edmond Chow <echow@cc.gatech.edu>
  * 
- * Copyright (c) 2019 Material Physics & Mechanics Group at Georgia Tech.
+ * Copyright (c) 2020 Material Physics & Mechanics Group at Georgia Tech.
  */
 
 #include <complex.h>
