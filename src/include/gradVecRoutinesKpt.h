@@ -60,6 +60,29 @@ void Calc_DX_kpt(
 );
 
 
+/**
+ * @brief   Calculate (Gradient + c * I) times a bunch of vectors in a matrix-free way.
+ *          
+ *          This function simply calls the Gradient_vec multiple times, this turns out
+ *          to be faster than directly calling Gradient_vec_3dirs once for ncol columns.
+ *
+ * @param pSPARC SPARC object
+ * @param DMnd Number of grid points in the local domain
+ * @param DMVertices The domain vertices of the local domain, order: [xs,xe,ys,ye,zs,ze]
+ * @param ncol Number of columns of vectors
+ * @param c Shifting constant
+ * @param x Input vector in the extended domain
+ * @param Dx_x (OUT) Output gradient result, x component
+ * @param Dx_y (OUT) Output gradient result, y component
+ * @param Dx_z (OUT) Output gradient result, z component
+ * @param comm Communicator in with x is distributed
+ */
+void Gradient_vectors_3dirs_kpt(
+    const SPARC_OBJ *pSPARC, const int DMnd, const int *DMVertices,
+    const int ncol, const double c, const double complex *x,
+    double complex *Dx_x, double complex *Dx_y, double complex *Dx_z,
+    const double *kpt_vec, MPI_Comm comm);
+
 #endif // GRADVECROUTINESKPT_H
 
 

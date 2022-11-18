@@ -45,11 +45,16 @@ void compute_mGGA_term_hamil(const SPARC_OBJ *pSPARC, double *x, int ncol, int c
     double *Dvxc3Dx_z = (double *) calloc(colLength, sizeof(double));
     assert(Dvxc3Dx_z != NULL);
 
+    double tt_1, tt_2;
+
+    tt_1 = MPI_Wtime();
+
     int i, j;
     for (i = 0; i < ncol; i++) {
-        Gradient_vectors_dir(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_x, 0, comm);
-        Gradient_vectors_dir(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_y, 1, comm);
-        Gradient_vectors_dir(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_z, 2, comm);
+        // Gradient_vectors_dir(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_x, 0, comm);
+        // Gradient_vectors_dir(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_y, 1, comm);
+        // Gradient_vectors_dir(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_z, 2, comm);
+        Gradient_vectors_3dirs(pSPARC, colLength, DMVertices, 1, 0.0, &(x[i*(unsigned)colLength]), Dx_x, Dx_y, Dx_z, comm);
 
         if(pSPARC->cell_typ > 10 && pSPARC->cell_typ < 20){ // transform for unorthogonal cell
             double DxAfter[3], DxBefore[3];
@@ -84,7 +89,7 @@ void compute_mGGA_term_hamil(const SPARC_OBJ *pSPARC, double *x, int ncol, int c
 
     #ifdef DEBUG
     t2 = MPI_Wtime();
-        if (rank == 0) printf("end of Calculating mGGA term in Hamiltonian, took %.3f ms\n", (t2 - t1)*1000);
+        if (rank == 0) printf("--- end of Calculating mGGA term in Hamiltonian, took %.3f ms\n", (t2 - t1)*1000);
     #endif
     free(Dx_x); free(Dx_y); free(Dx_z);
     free(Dvxc3Dx_x); free(Dvxc3Dx_y); free(Dvxc3Dx_z);
